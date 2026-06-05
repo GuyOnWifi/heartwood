@@ -1,0 +1,65 @@
+name: Release
+
+# Tag a release: git tag v1.0.0 && git push --tags
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install pinned SDK packages
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Signing is optional. Add repo secrets to produce a signed APK; otherwise an
+      # unsigned release APK is built (F-Droid signs its own builds regardless).
+      - name: Configure signing
+        env:
+          KEYSTORE_B64: ${{ secrets.HEARTWOOD_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.HEARTWOOD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.HEARTWOOD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.HEARTWOOD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            {
+              echo "HEARTWOOD_STORE_FILE=$RUNNER_TEMP/release.jks"
+              echo "HEARTWOOD_STORE_PASSWORD=$STORE_PASSWORD"
+              echo "HEARTWOOD_KEY_ALIAS=$KEY_ALIAS"
+              echo "HEARTWOOD_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+          else
+            echo "No signing secrets set — building an unsigned release APK."
+          fi
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Collect APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/*.apk "dist/heartwood-${GITHUB_REF_NAME}.apk"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+          generate_release_notes: true
