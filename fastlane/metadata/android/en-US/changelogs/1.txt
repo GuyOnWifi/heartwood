@@ -1,0 +1,8 @@
+First release of Heartwood.
+
+- Today dashboard with Material You metric cards and sparklines
+- Per-metric detail screens with charts, stats and recent records
+- Weekly summary with goals and progress rings
+- Home-screen widgets
+- CSV / JSON data export
+- Fully read-only and on-device

@@ -1,0 +1,17 @@
+Heartwood is a private, open-source window into the health and fitness data stored
+in Android's Health Connect. It only ever reads, nothing you see leaves your device,
+and there are no accounts, ads, or trackers.
+
+Features:
+
+* Today dashboard, Material You cards for steps, heart rate, sleep, energy, distance,
+  exercise, SpO2, weight, blood pressure and more, each with an at-a-glance sparkline.
+* Detail views, tap any metric for a full chart, statistics and recent records.
+* Weekly summary, daily averages measured against goals you set, with progress rings
+  and week-over-week trends.
+* Home-screen widgets, your key numbers, themed to match your wallpaper.
+* Export, save your accessible data to a CSV or JSON file at any time.
+
+Heartwood reads data through Health Connect, so it works alongside whatever apps and
+wearables already write there. You stay in control of exactly which data types it can
+read, and can change or revoke access at any time from Health Connect.
