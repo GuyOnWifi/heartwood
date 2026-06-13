@@ -7,7 +7,7 @@ else) can independently verify that a published binary was built from this sourc
 
 | Concern | How it's pinned |
 | --- | --- |
-| Gradle | `gradle/wrapper/gradle-wrapper.properties` → **9.5.1** (always use `./gradlew`) |
+| Gradle | `gradle/wrapper/gradle-wrapper.properties` → **8.13** (always use `./gradlew`) |
 | Android Gradle Plugin | `gradle/libs.versions.toml` → **8.13.2** |
 | Kotlin | `gradle/libs.versions.toml` → **2.2.21** |
 | All libraries | Exact versions in `gradle/libs.versions.toml`, no `+` / dynamic versions / ranges |
@@ -27,7 +27,7 @@ A reproducing environment must provide exactly:
 - `jdk17` (Temurin/Adoptium 17)
 - Android SDK with: `platform-tools`, `platforms;android-36`, `build-tools;36.0.0`
 - `ANDROID_HOME` / `ANDROID_SDK_ROOT` pointing at that SDK
-- Gradle is **not** needed on PATH, the wrapper bootstraps 9.5.1
+- Gradle is **not** needed on PATH, the wrapper bootstraps 8.13
 
 Build command:
 
