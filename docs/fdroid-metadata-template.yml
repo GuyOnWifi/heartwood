@@ -24,7 +24,7 @@ Binaries: https://github.com/GuyOnWifi/heartwood/releases/download/v%v/heartwood
 #   keytool -list -v -keystore heartwood-release.jks -alias <alias> | grep SHA256
 # then strip the colons and lowercase it.
 AllowedAPKSigningKeys:
-  - 0000000000000000000000000000000000000000000000000000000000000000
+  - bb25e066722c1bafe1960fa11f17e8ebd3d648a5feca012a1266e5e4c17ff519
 
 Builds:
   - versionName: 1.0.0
