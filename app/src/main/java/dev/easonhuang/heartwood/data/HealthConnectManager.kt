@@ -275,7 +275,14 @@ class HealthConnectManager(private val context: Context) {
             read(BloodPressureRecord::class, daysAgoStart(days), Instant.now())
                 .filterIsInstance<BloodPressureRecord>()
                 .sortedBy { it.time }
-                .map { SeriesPoint(it.time, it.systolic.inMillimetersOfMercury.toFloat(), dayFmt.format(it.time.atZone(zone))) }
+                .map {
+                    SeriesPoint(
+                        it.time,
+                        it.systolic.inMillimetersOfMercury.toFloat(),
+                        dayFmt.format(it.time.atZone(zone)),
+                        it.diastolic.inMillimetersOfMercury.toFloat(),
+                    )
+                }
         else -> series(metric, days)
     }
 
