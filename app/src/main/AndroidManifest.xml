@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- WorkManager (used only for the periodic widget-refresh worker) pulls in
+         ACCESS_NETWORK_STATE to support network-constrained jobs. Heartwood never sets a
+         network constraint and does no networking at all, so strip the permission to keep
+         the "nothing leaves your device" promise honest. See issue #1. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
 
     <!-- Health Connect read permissions -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
