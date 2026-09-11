@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
                         manager = app.healthConnect,
                         goalsRepo = app.goals,
                         exporter = app.exporter,
+                        dashboardPrefs = app.dashboardPrefs,
                         deepLinkMetric = deepLinkMetric,
                         onDeepLinkConsumed = { deepLinkMetric = null },
                     )

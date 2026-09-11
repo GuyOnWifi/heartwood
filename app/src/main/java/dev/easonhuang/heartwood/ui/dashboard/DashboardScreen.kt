@@ -27,6 +27,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.easonhuang.heartwood.data.DashboardPreferences
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.ui.DashboardViewModel
@@ -36,11 +37,13 @@ import dev.easonhuang.heartwood.ui.components.MetricCard
 @Composable
 fun DashboardScreen(
     manager: HealthConnectManager,
+    dashboardPrefs: DashboardPreferences,
     bottomInset: androidx.compose.ui.unit.Dp,
     onOpenMetric: (Metric) -> Unit,
     onManagePermissions: () -> Unit,
+    onCustomize: () -> Unit,
 ) {
-    val vm: DashboardViewModel = viewModel(factory = DashboardViewModel.factory(manager))
+    val vm: DashboardViewModel = viewModel(factory = DashboardViewModel.factory(manager, dashboardPrefs))
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -51,6 +54,9 @@ fun DashboardScreen(
             LargeTopAppBar(
                 title = { Text("Heartwood") },
                 actions = {
+                    IconButton(onClick = onCustomize) {
+                        Icon(Icons.Rounded.Tune, contentDescription = "Customize dashboard")
+                    }
                     IconButton(onClick = vm::refresh) {
                         if (refreshing) {
                             CircularProgressIndicator(Modifier.padding(4.dp), strokeWidth = 2.dp)
