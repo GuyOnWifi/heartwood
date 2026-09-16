@@ -1,6 +1,8 @@
 package dev.easonhuang.heartwood.data
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
@@ -432,5 +434,22 @@ class HealthConnectManager(private val context: Context) {
         // without this. Older-than-30-days reads need the history permission.
         const val PERMISSION_READ_IN_BACKGROUND = "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
         const val PERMISSION_READ_HISTORY = "android.permission.health.READ_HEALTH_DATA_HISTORY"
+
+        /**
+         * Health Connect's permission screen for one app, or null where a third-party app can't
+         * open it. From Android 14 (API 34) Health Connect is part of the platform and that screen
+         * requires the system-only GRANT_RUNTIME_PERMISSIONS, so launching it always fails; before
+         * that it is a separate APK that accepts the `androidx.health.ACTION_*` intent.
+         */
+        fun managePermissionsIntent(packageName: String): Intent? =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                null
+            } else {
+                Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS")
+                    .putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+            }
+
+        /** Health Connect's home screen: all apps, data sources and stored data. */
+        fun settingsIntent(): Intent = Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS)
     }
 }

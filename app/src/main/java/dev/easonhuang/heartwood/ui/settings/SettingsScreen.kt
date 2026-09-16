@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.MonitorHeart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -111,6 +112,15 @@ fun SettingsScreen(
                         title = "Manage data access",
                         subtitle = "Choose which health data Heartwood can read",
                         onClick = onManagePermissions,
+                    )
+                    SettingRow(
+                        icon = Icons.Rounded.MonitorHeart,
+                        title = "Open Health Connect",
+                        subtitle = "Manage all apps, data sources and stored data",
+                        onClick = {
+                            runCatching { context.startActivity(HealthConnectManager.settingsIntent()) }
+                                .onFailure { scope.launch { snackbar.showSnackbar("Couldn't open Health Connect") } }
+                        },
                     )
                     SettingRow(
                         icon = Icons.Rounded.Download,

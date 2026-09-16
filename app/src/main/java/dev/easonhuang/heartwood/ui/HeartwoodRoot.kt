@@ -44,8 +44,6 @@ import dev.easonhuang.heartwood.ui.settings.SettingsScreen
 import dev.easonhuang.heartwood.ui.summary.SummaryScreen
 
 private const val HEALTH_CONNECT_PACKAGE = "com.google.android.apps.healthdata"
-private const val ACTION_HC_SETTINGS = "androidx.health.connect.action.HEALTH_CONNECT_SETTINGS"
-private const val ACTION_MANAGE_HEALTH_PERMISSIONS = "androidx.health.connect.action.MANAGE_HEALTH_PERMISSIONS"
 
 private enum class Dest(val route: String, val label: String, val icon: ImageVector) {
     TODAY("today", "Today", Icons.Rounded.Today),
@@ -122,11 +120,12 @@ fun HeartwoodRoot(
             // Data granted but background (for widgets) missing → add it now.
             HealthConnectManager.PERMISSION_READ_IN_BACKGROUND !in g ->
                 permissionLauncher.launch(manager.extraPermissions)
-            // Everything granted → open Health Connect's per-app screen (then its home) to review.
+            // Everything granted → open Health Connect's per-app screen where the OS allows it,
+            // otherwise its home screen (App permissions → Heartwood) to review.
             else -> {
-                val candidates = listOf(
-                    Intent(ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, context.packageName),
-                    Intent(ACTION_HC_SETTINGS),
+                val candidates = listOfNotNull(
+                    HealthConnectManager.managePermissionsIntent(context.packageName),
+                    HealthConnectManager.settingsIntent(),
                 )
                 for (intent in candidates) {
                     if (runCatching { context.startActivity(intent) }.isSuccess) return

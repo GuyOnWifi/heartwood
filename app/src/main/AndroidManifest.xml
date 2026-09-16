@@ -42,10 +42,10 @@
             <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
         </intent>
         <intent>
-            <action android:name="androidx.health.connect.action.HEALTH_CONNECT_SETTINGS" />
+            <action android:name="androidx.health.ACTION_HEALTH_CONNECT_SETTINGS" />
         </intent>
         <intent>
-            <action android:name="androidx.health.connect.action.MANAGE_HEALTH_PERMISSIONS" />
+            <action android:name="androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS" />
         </intent>
     </queries>
 
