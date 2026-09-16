@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -52,6 +53,10 @@ import dev.easonhuang.heartwood.data.Metric
 import kotlinx.coroutines.launch
 
 private val RowHeight = 64.dp
+private val RowSpacing = 4.dp
+
+/** Distance between two rows' top edges - what one reorder step actually moves a card. */
+private val RowPitch = RowHeight + RowSpacing
 
 /**
  * Lets the user reorder Today-dashboard cards (long-press the handle and drag) and hide the ones
@@ -102,16 +107,30 @@ fun CustomizeDashboardScreen(
         // Drag state, tracked by the dragged metric so it survives list mutation mid-drag.
         var dragging by remember { mutableStateOf<Metric?>(null) }
         var dragOffset by remember { mutableFloatStateOf(0f) }
-        val rowHeightPx = with(LocalDensity.current) { RowHeight.toPx() }
+        val rowPitchPx = with(LocalDensity.current) { RowPitch.toPx() }
+        val listState = rememberLazyListState()
+
+        // Applies a reorder without letting the list scroll. LazyColumn otherwise anchors the
+        // viewport to the first visible item's *key*, so when that item is the one being dragged
+        // the whole list follows it: the card stops tracking the finger and its neighbour is
+        // pushed off-screen. requestScrollToItem re-pins the viewport by index on the next layout
+        // pass, which overrides that anchoring, so the rows hold still and only the card moves.
+        fun reorderTo(newOrder: List<Metric>) {
+            val anchorIndex = listState.firstVisibleItemIndex
+            val anchorOffset = listState.firstVisibleItemScrollOffset
+            order = newOrder
+            listState.requestScrollToItem(anchorIndex, anchorOffset)
+        }
 
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 12.dp, end = 12.dp,
                 top = inner.calculateTopPadding() + 8.dp,
                 bottom = bottomInset + 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(RowSpacing),
         ) {
             items(list, key = { it.key }) { metric ->
                 val isDragging = dragging == metric
@@ -141,17 +160,21 @@ fun CustomizeDashboardScreen(
                                 val current = order ?: return@detectDragGesturesAfterLongPress
                                 val cur = current.indexOf(metric)
                                 if (cur < 0) return@detectDragGesturesAfterLongPress
-                                val threshold = rowHeightPx / 2
+                                val threshold = rowPitchPx / 2
                                 when {
                                     dragOffset > threshold && cur < current.lastIndex -> {
-                                        order = current.toMutableList()
-                                            .apply { add(cur + 1, removeAt(cur)) }
-                                        dragOffset -= rowHeightPx
+                                        reorderTo(
+                                            current.toMutableList()
+                                                .apply { add(cur + 1, removeAt(cur)) }
+                                        )
+                                        dragOffset -= rowPitchPx
                                     }
                                     dragOffset < -threshold && cur > 0 -> {
-                                        order = current.toMutableList()
-                                            .apply { add(cur - 1, removeAt(cur)) }
-                                        dragOffset += rowHeightPx
+                                        reorderTo(
+                                            current.toMutableList()
+                                                .apply { add(cur - 1, removeAt(cur)) }
+                                        )
+                                        dragOffset += rowPitchPx
                                     }
                                 }
                             },
