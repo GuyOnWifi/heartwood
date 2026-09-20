@@ -17,6 +17,7 @@ data class SeriesPoint(
     val time: Instant,
     val value: Float,
     val label: String,          // x-axis label, e.g. "Mon" or "14:30"
+    val value2: Float? = null,  // optional paired reading, e.g. diastolic for blood pressure
 )
 
 /** Full detail payload for one metric. */

@@ -43,14 +43,15 @@ class ExportManager(
     }
 
     private fun writeCsv(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
-        writer.append("metric,title,unit,timestamp,value\n")
+        writer.append("metric,title,unit,timestamp,value,value2\n")
         sections.forEach { (metric, points) ->
             points.forEach { p ->
                 writer.append(metric.key).append(',')
                     .append(csv(metric.title)).append(',')
                     .append(metric.unit).append(',')
                     .append(iso.format(p.time)).append(',')
-                    .append(p.value.toString()).append('\n')
+                    .append(p.value.toString()).append(',')
+                    .append(p.value2?.toString().orEmpty()).append('\n')
             }
         }
     }
@@ -66,7 +67,9 @@ class ExportManager(
             points.forEachIndexed { pi, p ->
                 if (pi > 0) writer.append(',')
                 writer.append("{\"t\":\"").append(iso.format(p.time)).append("\",\"v\":")
-                    .append(p.value.toString()).append('}')
+                    .append(p.value.toString())
+                p.value2?.let { writer.append(",\"v2\":").append(it.toString()) }
+                writer.append('}')
             }
             writer.append("]}")
         }
