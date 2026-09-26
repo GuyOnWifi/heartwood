@@ -16,9 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -78,13 +80,28 @@ fun HeartwoodRoot(
 
     var granted by remember { mutableStateOf<Set<String>?>(null) }
     // True while the initial setup is chaining its permission requests (data → background).
-    var inSetup by remember { mutableStateOf(false) }
-    var requestedExtras by remember { mutableStateOf(false) }
+    // Setup state is saveable so the chain survives recreation while HC's permission screen is up.
+    var inSetup by rememberSaveable { mutableStateOf(false) }
+    var requestedExtras by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // Counts permission-request answers, and the count when the setup step now in flight started.
+    // Setup only moves on once its own request has been answered: reacting to `granted` alone
+    // would judge the grants from *before* the prompt and cancel setup straight away.
+    var permissionResults by rememberSaveable { mutableIntStateOf(0) }
+    var awaitingAfter by rememberSaveable { mutableIntStateOf(0) }
+
+    // The result only lists the permissions in that request, not everything held, so re-read the
+    // full set rather than assigning it (which would e.g. drop background access after a data-only
+    // request that was already granted and returned without a screen or resume).
     val permissionLauncher = rememberLauncherForActivityResult(
         PermissionController.createRequestPermissionResultContract()
-    ) { result -> granted = result }
+    ) {
+        scope.launch {
+            granted = manager.grantedPermissions()
+            permissionResults++
+        }
+    }
 
     // Re-read grants every time we return to the app (e.g. after toggling in HC settings).
     LifecycleResumeEffect(Unit) {
@@ -95,15 +112,20 @@ fun HeartwoodRoot(
     val hasData = (granted ?: emptySet()).any { it in manager.metricPermissions }
     val hasBackground = granted?.contains(HealthConnectManager.PERMISSION_READ_IN_BACKGROUND) == true
 
+    fun requestInSetup(permissions: Set<String>) {
+        awaitingAfter = permissionResults
+        permissionLauncher.launch(permissions)
+    }
+
     // Setup is one continuous flow: after data is granted, immediately chain the background +
     // history prompt (HC won't allow it in the same request), so widgets work straight away.
-    LaunchedEffect(inSetup, granted) {
-        if (!inSetup || granted == null) return@LaunchedEffect
+    LaunchedEffect(inSetup, permissionResults) {
+        if (!inSetup || permissionResults == awaitingAfter) return@LaunchedEffect
         when {
             !hasData -> inSetup = false              // user declined data; back to onboarding
             !hasBackground && !requestedExtras -> {  // data in, now ask for background once
                 requestedExtras = true
-                permissionLauncher.launch(manager.extraPermissions)
+                requestInSetup(manager.extraPermissions)
             }
             else -> inSetup = false                  // background resolved → enter the app
         }
@@ -112,7 +134,7 @@ fun HeartwoodRoot(
     fun startSetup() {
         requestedExtras = false
         inSetup = true
-        permissionLauncher.launch(manager.metricPermissions)
+        requestInSetup(manager.metricPermissions)
     }
 
     fun manageAccess() {
