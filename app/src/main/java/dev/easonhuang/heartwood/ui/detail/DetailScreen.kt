@@ -42,6 +42,7 @@ import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricDetail
 import dev.easonhuang.heartwood.data.MetricKind
 import dev.easonhuang.heartwood.data.RecordRow
+import dev.easonhuang.heartwood.data.formatValue
 import dev.easonhuang.heartwood.ui.DetailViewModel
 import dev.easonhuang.heartwood.ui.components.BarChart
 import dev.easonhuang.heartwood.ui.components.LineChart
@@ -139,7 +140,7 @@ private fun ChartCard(d: MetricDetail) {
             if (d.metric.kind == MetricKind.DAILY_TOTAL) {
                 BarChart(d.points, d.metric.accent, Modifier.fillMaxSize())
             } else {
-                LineChart(d.points, d.metric.accent, Modifier.fillMaxSize())
+                LineChart(d.points, d.metric.accent, Modifier.fillMaxSize(), format = d.metric::formatValue)
             }
         }
     }

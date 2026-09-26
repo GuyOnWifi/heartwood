@@ -3,6 +3,7 @@ package dev.easonhuang.heartwood.data
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.text.format.DateFormat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
@@ -35,6 +36,8 @@ import java.time.LocalDateTime
 import java.time.Period
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 /**
@@ -45,9 +48,13 @@ import kotlin.reflect.KClass
 class HealthConnectManager(private val context: Context) {
 
     private val zone: ZoneId get() = ZoneId.systemDefault()
-    private val dowFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE")
-    private val dayFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d")
-    private val timeFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+    // Formatting runs per data point (thousands for heart rate), so resolve each pattern once.
+    private val formatters = ConcurrentHashMap<Pair<Locale, String>, DateTimeFormatter>()
+    // Re-derived on each use so locale and the system 12/24-hour setting apply without a restart.
+    private val dowFmt: DateTimeFormatter get() = localizedFormatter("EEE")
+    private val dayFmt: DateTimeFormatter get() = localizedFormatter("MMMd")
+    private val timeFmt: DateTimeFormatter
+        get() = localizedFormatter(if (DateFormat.is24HourFormat(context)) "Hm" else "hm")
 
     val client: HealthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
 
@@ -104,8 +111,8 @@ class HealthConnectManager(private val context: Context) {
                 val avg = spark.average().toFloat()
                 MetricSummary(
                     metric = metric,
-                    value = formatValue(metric, today),
-                    caption = "7-day avg ${formatValue(metric, avg)} ${metric.unit}",
+                    value = metric.formatValue(today),
+                    caption = "7-day avg ${metric.formatValue(avg)} ${metric.unit}",
                     hasData = true,
                     granted = true,
                     spark = spark,
@@ -115,7 +122,7 @@ class HealthConnectManager(private val context: Context) {
                 val last = points.last()
                 MetricSummary(
                     metric = metric,
-                    value = formatValue(metric, last.value),
+                    value = metric.formatValue(last.value),
                     caption = "as of ${dayFmt.format(last.time.atZone(zone))}",
                     hasData = true,
                     granted = true,
@@ -183,24 +190,24 @@ class HealthConnectManager(private val context: Context) {
         val caption: String
         val stats: List<Pair<String, String>>
         if (metric.kind == MetricKind.DAILY_TOTAL) {
-            headline = formatValue(metric, points.last().value)
+            headline = metric.formatValue(points.last().value)
             caption = "Today, ${metric.unit}"
             stats = listOf(
-                "Daily avg" to "${formatValue(metric, values.average().toFloat())} ${metric.unit}",
-                "Best day" to "${formatValue(metric, values.max())} ${metric.unit}",
-                "14-day total" to "${formatValue(metric, values.sum())} ${metric.unit}",
+                "Daily avg" to "${metric.formatValue(values.average().toFloat())} ${metric.unit}",
+                "Best day" to "${metric.formatValue(values.max())} ${metric.unit}",
+                "14-day total" to "${metric.formatValue(values.sum())} ${metric.unit}",
             )
         } else {
-            headline = "${formatValue(metric, points.last().value)} ${metric.unit}"
+            headline = "${metric.formatValue(points.last().value)} ${metric.unit}"
             caption = "Latest, ${dayFmt.format(points.last().time.atZone(zone))}"
             stats = listOf(
-                "Average" to "${formatValue(metric, values.average().toFloat())} ${metric.unit}",
-                "Min" to "${formatValue(metric, values.min())} ${metric.unit}",
-                "Max" to "${formatValue(metric, values.max())} ${metric.unit}",
+                "Average" to "${metric.formatValue(values.average().toFloat())} ${metric.unit}",
+                "Min" to "${metric.formatValue(values.min())} ${metric.unit}",
+                "Max" to "${metric.formatValue(values.max())} ${metric.unit}",
             )
         }
         val recent = points.takeLast(20).reversed().map {
-            RecordRow("${formatValue(metric, it.value)} ${metric.unit}", dayMonthTime(it.time))
+            RecordRow("${metric.formatValue(it.value)} ${metric.unit}", dayMonthTime(it.time))
         }
         return MetricDetail(metric, headline, caption, points, stats, recent)
     }
@@ -442,11 +449,12 @@ class HealthConnectManager(private val context: Context) {
             else -> 0f
         }
 
-    private fun formatValue(metric: Metric, v: Float): String = when (metric) {
-        Metric.STEPS, Metric.FLOORS -> "%,d".format(v.toLong())
-        Metric.DISTANCE, Metric.HYDRATION -> "%.2f".format(v)
-        Metric.VO2MAX, Metric.WEIGHT, Metric.SLEEP -> "%.1f".format(v)
-        else -> "%.0f".format(v)
+    /** The locale's own ordering and punctuation for the given skeleton, e.g. "MMMd" → "d MMM". */
+    private fun localizedFormatter(skeleton: String): DateTimeFormatter {
+        val locale = Locale.getDefault()
+        return formatters.getOrPut(locale to skeleton) {
+            DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, skeleton), locale)
+        }
     }
 
     private fun dayMonthTime(t: Instant): String {

@@ -101,7 +101,12 @@ fun BarChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modif
 
 /** Smooth-ish line chart with min/max guide labels for sampled metrics. */
 @Composable
-fun LineChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modifier) {
+fun LineChart(
+    points: List<SeriesPoint>,
+    color: Color,
+    modifier: Modifier = Modifier,
+    format: (Float) -> String = { "%.0f".format(it) },
+) {
     if (points.size < 2) {
         Box(modifier, contentAlignment = Alignment.Center) {
             Text("Not enough data to chart", style = MaterialTheme.typography.bodyMedium,
@@ -114,9 +119,9 @@ fun LineChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modi
     val max = values.max()
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("max %.0f".format(max), style = MaterialTheme.typography.labelSmall,
+            Text("max ${format(max)}", style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("min %.0f".format(min), style = MaterialTheme.typography.labelSmall,
+            Text("min ${format(min)}", style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(8.dp))
