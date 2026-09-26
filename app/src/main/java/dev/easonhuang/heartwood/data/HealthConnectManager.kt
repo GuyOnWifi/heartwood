@@ -287,7 +287,8 @@ class HealthConnectManager(private val context: Context) {
         when (metric.kind) {
             MetricKind.DAILY_TOTAL ->
                 if (metric == Metric.EXERCISE) exerciseSeries(days) else dailyTotalSeries(metric, days)
-            MetricKind.LATEST -> latestSeries(metric, days)
+            MetricKind.LATEST ->
+                if (metric == Metric.SLEEP) sleepSeries(days) else latestSeries(metric, days)
         }
 
     private suspend fun dailyTotalSeries(metric: Metric, days: Int): List<SeriesPoint> {
@@ -324,6 +325,21 @@ class HealthConnectManager(private val context: Context) {
         }
     }
 
+    /**
+     * One point per night, dated by the day you woke up: a session ending this morning is today's
+     * sleep, and naps or split sessions ending the same day add to it instead of replacing it.
+     */
+    private suspend fun sleepSeries(days: Int): List<SeriesPoint> {
+        val recs = read(SleepSessionRecord::class, daysAgoStart(days), Instant.now())
+            .filterIsInstance<SleepSessionRecord>()
+        return recs.groupBy { it.endTime.atZone(zone).toLocalDate() }
+            .map { (date, sessions) ->
+                val hours = sessions.sumOf { Duration.between(it.startTime, it.endTime).toMinutes() } / 60f
+                SeriesPoint(sessions.maxOf { it.endTime }, hours, dayFmt.format(date))
+            }
+            .sortedBy { it.time }
+    }
+
     private suspend fun latestSeries(metric: Metric, days: Int): List<SeriesPoint> {
         val recs = read(recordClass(metric), daysAgoStart(days), Instant.now())
         return recs.mapNotNull { r ->
@@ -353,7 +369,6 @@ class HealthConnectManager(private val context: Context) {
         is HeightRecord -> r.time
         is BloodGlucoseRecord -> r.time
         is BloodPressureRecord -> r.time
-        is SleepSessionRecord -> r.startTime
         is ExerciseSessionRecord -> r.startTime
         else -> null
     }
@@ -367,9 +382,6 @@ class HealthConnectManager(private val context: Context) {
         Metric.WEIGHT -> (r as? WeightRecord)?.weight?.inKilograms?.toFloat()
         Metric.HEIGHT -> (r as? HeightRecord)?.height?.inMeters?.times(100)?.toFloat()
         Metric.BLOOD_GLUCOSE -> (r as? BloodGlucoseRecord)?.level?.inMilligramsPerDeciliter?.toFloat()
-        Metric.SLEEP -> (r as? SleepSessionRecord)?.let {
-            Duration.between(it.startTime, it.endTime).toMinutes() / 60f
-        }
         else -> null
     }
 
