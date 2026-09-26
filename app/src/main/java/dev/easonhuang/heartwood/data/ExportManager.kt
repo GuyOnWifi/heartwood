@@ -42,7 +42,8 @@ class ExportManager(
         }
     }
 
-    private fun writeCsv(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
+    // Writers and escapers are internal so unit tests can drive them without a ContentResolver.
+    internal fun writeCsv(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
         writer.append("metric,title,unit,timestamp,value\n")
         sections.forEach { (metric, points) ->
             points.forEach { p ->
@@ -55,7 +56,7 @@ class ExportManager(
         }
     }
 
-    private fun writeJson(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
+    internal fun writeJson(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
         writer.append("{\"app\":\"Heartwood\",\"metrics\":[")
         sections.forEachIndexed { si, (metric, points) ->
             if (si > 0) writer.append(',')
@@ -73,8 +74,8 @@ class ExportManager(
         writer.append("]}")
     }
 
-    private fun csv(s: String): String =
+    internal fun csv(s: String): String =
         if (s.contains(',') || s.contains('"')) "\"${s.replace("\"", "\"\"")}\"" else s
 
-    private fun jsonStr(s: String): String = "\"${s.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+    internal fun jsonStr(s: String): String = "\"${s.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 }
