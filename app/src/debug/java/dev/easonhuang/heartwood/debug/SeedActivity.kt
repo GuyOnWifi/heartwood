@@ -39,6 +39,8 @@ import kotlin.math.sin
  * DEBUG-ONLY. Inserts ~14 days of realistic sample data into Health Connect so screens have
  * something to show for screenshots. Launch with:
  *   adb shell am start -n dev.easonhuang.heartwood.debug/dev.easonhuang.heartwood.debug.SeedActivity
+ * Add `--ez dense_hr true` to instead write heart rate as one record every 5 minutes for 7 days
+ * (~2000 records, more than one Health Connect read page), like some watches do.
  */
 class SeedActivity : Activity() {
 
@@ -52,14 +54,15 @@ class SeedActivity : Activity() {
         super.onCreate(savedInstanceState)
         val client = HealthConnectClient.getOrCreate(this)
         CoroutineScope(Dispatchers.Main).launch {
-            val n = runCatching { seed(client) }
+            val denseHr = intent.getBooleanExtra("dense_hr", false)
+            val n = runCatching { seed(client, denseHr) }
             Toast.makeText(this@SeedActivity, "Seeded: $n", Toast.LENGTH_LONG).show()
             Log.d("HeartwoodSeed", "result=$n")
             finish()
         }
     }
 
-    private suspend fun seed(client: HealthConnectClient): Int = withContext(Dispatchers.IO) {
+    private suspend fun seed(client: HealthConnectClient, denseHr: Boolean): Int = withContext(Dispatchers.IO) {
         val today = LocalDate.now()
 
         // Clear prior seeded data so re-runs don't accumulate.
@@ -125,15 +128,31 @@ class SeedActivity : Activity() {
             // Sleep: previous night ~22:30 → ~06:30
             val sleepStart = date.minusDays(1).atTime(22, 20).atZone(zone).toInstant()
             val sleepEnd = date.atTime(6, (20 + (wave * 40).toInt())).atZone(zone).toInstant()
-            records += SleepSessionRecord(
+            // HC rejects future records, so skip tonight's sleep (and later readings) when seeding early.
+            if (!sleepEnd.isAfter(Instant.now())) records += SleepSessionRecord(
                 startTime = sleepStart, startZoneOffset = off(sleepStart),
                 endTime = sleepEnd, endZoneOffset = off(sleepEnd),
                 title = "Sleep", notes = null, stages = emptyList(), metadata = meta,
             )
         }
 
-        // Heart rate: samples every 30 min for the last 2 days
+        // Heart rate: one short record per 5 minutes for 7 days, or samples every 30 min for 2 days
+        if (denseHr) {
+            val start = today.minusDays(6).atStartOfDay(zone).toInstant()
+            var t = start
+            var i = 0
+            while (t.isBefore(Instant.now())) {
+                val bpm = (62 + 30 * ((sin(i * 0.05) + 1) / 2)).toLong()
+                records += HeartRateRecord(
+                    startTime = t, startZoneOffset = off(t), endTime = t.plusSeconds(60), endZoneOffset = off(t),
+                    samples = listOf(HeartRateRecord.Sample(time = t, beatsPerMinute = bpm)), metadata = meta,
+                )
+                t = t.plusSeconds(300)
+                i++
+            }
+        }
         for (d in 0..1) {
+            if (denseHr) break
             val date = today.minusDays(d.toLong())
             val samples = mutableListOf<HeartRateRecord.Sample>()
             val limit = if (d == 0) (Instant.now().epochSecond - date.atStartOfDay(zone).toInstant().epochSecond) / 1800 else 48L
@@ -154,6 +173,7 @@ class SeedActivity : Activity() {
         // Weight + SpO2: a reading every 3 days
         for (d in 0..27 step 3) {
             val t = today.minusDays(d.toLong()).atTime(7, 30).atZone(zone).toInstant()
+            if (t.isAfter(Instant.now())) continue
             records += WeightRecord(
                 weight = Mass.kilograms(73.5 - d * 0.05), time = t, zoneOffset = off(t), metadata = meta,
             )
@@ -162,7 +182,7 @@ class SeedActivity : Activity() {
             )
         }
 
-        client.insertRecords(records)
+        records.chunked(1000).forEach { client.insertRecords(it) }  // HC caps records per insert
         records.size
     }
 }
