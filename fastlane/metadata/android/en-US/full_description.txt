@@ -6,9 +6,10 @@ Features:
 
 * Today dashboard, Material You cards for steps, heart rate, sleep, energy, distance,
   exercise, SpO2, weight, blood pressure and more, each with an at-a-glance sparkline.
+  Reorder or hide cards to keep only what you track.
 * Detail views, tap any metric for a full chart, statistics and recent records.
-* Weekly summary, daily averages measured against goals you set, with progress rings
-  and week-over-week trends.
+* Weekly summary, daily averages measured against goals you set, with progress rings,
+  goal lines and week-over-week trends.
 * Home-screen widgets, your key numbers, themed to match your wallpaper.
 * Export, save your accessible data to a CSV or JSON file at any time.
 
