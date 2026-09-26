@@ -44,8 +44,14 @@ import kotlin.reflect.KClass
  * Thin, read-only wrapper around Health Connect. Knows how to turn each [Metric] into a dashboard
  * summary or a full detail series. All public reads swallow per-metric errors so one missing data
  * type never blanks the whole dashboard.
+ *
+ * [clientOverride] replaces the platform client (tests pass a fake); by default it is created
+ * lazily from [context].
  */
-class HealthConnectManager(private val context: Context) {
+class HealthConnectManager(
+    private val context: Context,
+    private val clientOverride: HealthConnectClient? = null,
+) {
 
     private val zone: ZoneId get() = ZoneId.systemDefault()
     // Formatting runs per data point (thousands for heart rate), so resolve each pattern once.
@@ -56,7 +62,9 @@ class HealthConnectManager(private val context: Context) {
     private val timeFmt: DateTimeFormatter
         get() = localizedFormatter(if (DateFormat.is24HourFormat(context)) "Hm" else "hm")
 
-    val client: HealthConnectClient by lazy { HealthConnectClient.getOrCreate(context) }
+    val client: HealthConnectClient by lazy {
+        clientOverride ?: HealthConnectClient.getOrCreate(context)
+    }
 
     /** Per-metric data-type read permissions (used for the dashboard's per-tile lock state). */
     val metricPermissions: Set<String> =
