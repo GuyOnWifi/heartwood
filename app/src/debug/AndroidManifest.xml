@@ -14,6 +14,13 @@
     <uses-permission android:name="android.permission.health.WRITE_OXYGEN_SATURATION" />
     <uses-permission android:name="android.permission.health.WRITE_SLEEP" />
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.WRITE_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.WRITE_RESPIRATORY_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_VO2_MAX" />
+    <uses-permission android:name="android.permission.health.WRITE_HEIGHT" />
+    <uses-permission android:name="android.permission.health.WRITE_BLOOD_PRESSURE" />
+    <uses-permission android:name="android.permission.health.WRITE_BLOOD_GLUCOSE" />
 
     <application>
         <activity

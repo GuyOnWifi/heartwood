@@ -6,24 +6,34 @@ import android.util.Log
 import android.widget.Toast
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.BloodGlucoseRecord
+import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.DistanceRecord
+import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.FloorsClimbedRecord
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
+import androidx.health.connect.client.records.RespiratoryRateRecord
+import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
+import androidx.health.connect.client.units.BloodGlucose
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Percentage
+import androidx.health.connect.client.units.Pressure
 import androidx.health.connect.client.units.Volume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +81,9 @@ class SeedActivity : Activity() {
             StepsRecord::class, DistanceRecord::class, ActiveCaloriesBurnedRecord::class,
             TotalCaloriesBurnedRecord::class, FloorsClimbedRecord::class, HydrationRecord::class,
             HeartRateRecord::class, SleepSessionRecord::class, WeightRecord::class, OxygenSaturationRecord::class,
+            ExerciseSessionRecord::class, RestingHeartRateRecord::class, HeartRateVariabilityRmssdRecord::class,
+            RespiratoryRateRecord::class, Vo2MaxRecord::class, HeightRecord::class, BloodPressureRecord::class,
+            BloodGlucoseRecord::class,
         ).forEach { runCatching { client.deleteRecords(it, clearFilter) } }
 
         val records = mutableListOf<Record>()
@@ -169,6 +182,37 @@ class SeedActivity : Activity() {
                 )
             }
         }
+
+        // Morning vitals: one reading per day, skipping today's if it's still ahead.
+        for (d in 0..13) {
+            val t = today.minusDays(d.toLong()).atTime(6, 45).atZone(zone).toInstant()
+            if (t.isAfter(Instant.now())) continue
+            val wave = (sin(d * 0.9) + 1) / 2
+            records += RestingHeartRateRecord(time = t, zoneOffset = off(t), beatsPerMinute = (56 + wave * 6).toLong(), metadata = meta)
+            records += HeartRateVariabilityRmssdRecord(time = t, zoneOffset = off(t), heartRateVariabilityMillis = 38.0 + wave * 22, metadata = meta)
+            records += RespiratoryRateRecord(time = t, zoneOffset = off(t), rate = 13.5 + wave * 2, metadata = meta)
+            records += BloodGlucoseRecord(
+                time = t, zoneOffset = off(t), level = BloodGlucose.milligramsPerDeciliter(88.0 + wave * 14),
+                specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_CAPILLARY_BLOOD,
+                mealType = 0, relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_FASTING, metadata = meta,
+            )
+            if (d % 2 == 0) records += BloodPressureRecord(
+                time = t, zoneOffset = off(t),
+                systolic = Pressure.millimetersOfMercury(114.0 + wave * 10),
+                diastolic = Pressure.millimetersOfMercury(74.0 + wave * 6),
+                metadata = meta,
+            )
+            if (d % 7 == 0) records += Vo2MaxRecord(time = t, zoneOffset = off(t), vo2MillilitersPerMinuteKilogram = 44.0 - d * 0.1, metadata = meta)
+            // Workout most evenings: 30-60 min run
+            val exStart = today.minusDays(d.toLong()).atTime(18, 0).atZone(zone).toInstant()
+            val exEnd = exStart.plusSeconds((30 + (wave * 30).toLong()) * 60)
+            if (d % 3 != 2 && !exEnd.isAfter(Instant.now())) records += ExerciseSessionRecord(
+                startTime = exStart, startZoneOffset = off(exStart), endTime = exEnd, endZoneOffset = off(exEnd),
+                exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_RUNNING, title = "Evening run", metadata = meta,
+            )
+        }
+        val hT = today.minusDays(20).atTime(9, 0).atZone(zone).toInstant()
+        records += HeightRecord(time = hT, zoneOffset = off(hT), height = Length.meters(1.78), metadata = meta)
 
         // Weight + SpO2: a reading every 3 days
         for (d in 0..27 step 3) {
