@@ -40,6 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -141,8 +143,17 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Box(Modifier.fillMaxWidth().height(96.dp)) {
-                BarChart(stat.perDay, accent, Modifier.fillMaxSize())
+            val days = stat.perDay.size
+            val daysMet = stat.perDay.count { it.value >= stat.goal }
+            val chartDescription = "${stat.metric.title} over the last $days days" +
+                if (stat.goal > 0f) ": goal met on $daysMet of $days days" else ""
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .clearAndSetSemantics { contentDescription = chartDescription },
+            ) {
+                BarChart(stat.perDay, accent, Modifier.fillMaxSize(), goal = stat.goal)
             }
         }
     }

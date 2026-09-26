@@ -19,6 +19,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -60,11 +61,16 @@ fun Sparkline(values: List<Float>, color: Color, modifier: Modifier = Modifier) 
     }
 }
 
-/** 7/14-day bar chart with weekday labels for daily-total metrics. */
+/**
+ * 7/14-day bar chart with weekday labels for daily-total metrics. When [goal] is set, a dashed
+ * threshold line is drawn at that value and bars below it are muted so goal days stand out.
+ */
 @Composable
-fun BarChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modifier) {
+fun BarChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modifier, goal: Float? = null) {
+    val goalLineColor = MaterialTheme.colorScheme.onSurfaceVariant
     Column(modifier) {
-        val max = points.maxOfOrNull { it.value }?.takeIf { it > 0f } ?: 1f
+        // Scale includes the goal so the line always stays inside the chart.
+        val max = maxOf(points.maxOfOrNull { it.value } ?: 0f, goal ?: 0f).takeIf { it > 0f } ?: 1f
         Canvas(Modifier.fillMaxWidth().weight(1f)) {
             val n = points.size
             if (n == 0) return@Canvas
@@ -74,11 +80,29 @@ fun BarChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modif
                 val h = (p.value / max) * size.height
                 val left = i * slot + (slot - barW) / 2f
                 val top = size.height - h
+                val barColor = when {
+                    p.value <= 0f -> color.copy(alpha = 0.18f)
+                    goal != null && p.value < goal -> color.copy(alpha = 0.4f)
+                    else -> color
+                }
                 drawRoundRect(
-                    color = if (p.value > 0f) color else color.copy(alpha = 0.18f),
+                    color = barColor,
                     topLeft = Offset(left, if (p.value > 0f) top else size.height - 3.dp.toPx()),
                     size = androidx.compose.ui.geometry.Size(barW, if (p.value > 0f) h else 3.dp.toPx()),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(barW / 2.4f, barW / 2.4f),
+                )
+            }
+            if (goal != null && goal > 0f) {
+                val stroke = 1.5.dp.toPx()
+                // Keep the full stroke visible when the goal sits at the top of the scale.
+                val y = (size.height - (goal / max) * size.height).coerceAtLeast(stroke / 2f)
+                drawLine(
+                    color = goalLineColor.copy(alpha = 0.8f),
+                    start = Offset(0f, y),
+                    end = Offset(size.width, y),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())),
                 )
             }
         }
