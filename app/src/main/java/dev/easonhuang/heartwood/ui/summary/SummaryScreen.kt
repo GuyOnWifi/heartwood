@@ -1,5 +1,6 @@
 package dev.easonhuang.heartwood.ui.summary
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,8 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +60,9 @@ import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.data.unit
 import dev.easonhuang.heartwood.ui.components.BarChart
 import dev.easonhuang.heartwood.ui.components.GoalRing
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,16 +165,66 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
             } else {
                 pluralStringResource(R.plurals.summary_chart_description, days, stat.metric.title, days)
             }
+            // Tapping a bar shows that day's exact value and how it compares with the goal.
+            var selected by rememberSaveable(stat.metric) { mutableStateOf<Int?>(null) }
+            val dayFormat = remember { dayFormatter() }
+            val dayTexts = stat.perDay.map { p ->
+                stringResource(R.string.summary_bar_value, dayFormat.format(p.time.atZone(ZoneId.systemDefault())),
+                    stringResource(R.string.value_with_unit, stat.metric.formatValue(p.value), stat.metric.unit)) to
+                    goalText(stat, p.value)
+            }
             Box(
                 Modifier
                     .fillMaxWidth()
                     .height(96.dp)
-                    .clearAndSetSemantics { contentDescription = chartDescription },
+                    .semantics { contentDescription = chartDescription },
             ) {
-                BarChart(stat.perDay, accent, Modifier.fillMaxSize(), goal = stat.goal)
+                BarChart(
+                    stat.perDay, accent, Modifier.fillMaxSize(), goal = stat.goal,
+                    selected = selected,
+                    onSelect = { selected = it },
+                    barDescription = { i -> dayTexts[i].toList().filterNotNull().joinToString(", ") },
+                )
+            }
+            selected?.takeIf { it in dayTexts.indices }?.let { i ->
+                val (value, goal) = dayTexts[i]
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        value,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (goal != null) {
+                        val met = stat.perDay[i].value >= stat.goal
+                        Text(
+                            goal,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (met) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+/** "Goal met" or how far a day fell short, or null when no goal is set. */
+@Composable
+private fun goalText(stat: WeeklyStat, value: Float): String? = when {
+    stat.goal <= 0f -> null
+    value >= stat.goal -> stringResource(R.string.summary_bar_goal_met)
+    else -> stringResource(
+        R.string.summary_bar_below_goal,
+        stringResource(R.string.value_with_unit, stat.metric.formatValue(stat.goal - value), stat.metric.unit),
+    )
+}
+
+/** Weekday + date in the locale's own order, e.g. "Wed, Oct 14". */
+private fun dayFormatter(): DateTimeFormatter {
+    val locale = Locale.getDefault()
+    return DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "EEEMMMd"), locale)
 }
 
 @Composable

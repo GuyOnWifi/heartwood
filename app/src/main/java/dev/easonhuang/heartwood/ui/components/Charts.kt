@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +26,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,55 +71,89 @@ fun Sparkline(values: List<Float>, color: Color, modifier: Modifier = Modifier) 
 /**
  * 7/14-day bar chart with weekday labels for daily-total metrics. When [goal] is set, a dashed
  * threshold line is drawn at that value and bars below it are muted so goal days stand out.
+ *
+ * Passing [onSelect] makes each bar tappable (and a selectable node for TalkBack, described by
+ * [barDescription]); the [selected] bar keeps its color while the others fade.
  */
 @Composable
-fun BarChart(points: List<SeriesPoint>, color: Color, modifier: Modifier = Modifier, goal: Float? = null) {
+fun BarChart(
+    points: List<SeriesPoint>,
+    color: Color,
+    modifier: Modifier = Modifier,
+    goal: Float? = null,
+    selected: Int? = null,
+    onSelect: ((Int?) -> Unit)? = null,
+    barDescription: (Int) -> String = { points[it].label },
+) {
     val goalLineColor = MaterialTheme.colorScheme.onSurfaceVariant
     Column(modifier) {
         // Scale includes the goal so the line always stays inside the chart.
         val max = maxOf(points.maxOfOrNull { it.value } ?: 0f, goal ?: 0f).takeIf { it > 0f } ?: 1f
-        Canvas(Modifier.fillMaxWidth().weight(1f)) {
-            val n = points.size
-            if (n == 0) return@Canvas
-            val slot = size.width / n
-            val barW = slot * 0.55f
-            points.forEachIndexed { i, p ->
-                val h = (p.value / max) * size.height
-                val left = i * slot + (slot - barW) / 2f
-                val top = size.height - h
-                val barColor = when {
-                    p.value <= 0f -> color.copy(alpha = 0.18f)
-                    goal != null && p.value < goal -> color.copy(alpha = 0.4f)
-                    else -> color
+        Box(Modifier.fillMaxWidth().weight(1f)) {
+            Canvas(Modifier.fillMaxSize()) {
+                val n = points.size
+                if (n == 0) return@Canvas
+                val slot = size.width / n
+                val barW = slot * 0.55f
+                points.forEachIndexed { i, p ->
+                    val h = (p.value / max) * size.height
+                    val left = i * slot + (slot - barW) / 2f
+                    val top = size.height - h
+                    val base = when {
+                        p.value <= 0f -> color.copy(alpha = 0.18f)
+                        goal != null && p.value < goal -> color.copy(alpha = 0.4f)
+                        else -> color
+                    }
+                    val barColor = if (selected != null && i != selected) base.copy(alpha = base.alpha * 0.35f) else base
+                    drawRoundRect(
+                        color = barColor,
+                        topLeft = Offset(left, if (p.value > 0f) top else size.height - 3.dp.toPx()),
+                        size = androidx.compose.ui.geometry.Size(barW, if (p.value > 0f) h else 3.dp.toPx()),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(barW / 2.4f, barW / 2.4f),
+                    )
                 }
-                drawRoundRect(
-                    color = barColor,
-                    topLeft = Offset(left, if (p.value > 0f) top else size.height - 3.dp.toPx()),
-                    size = androidx.compose.ui.geometry.Size(barW, if (p.value > 0f) h else 3.dp.toPx()),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(barW / 2.4f, barW / 2.4f),
-                )
+                if (goal != null && goal > 0f) {
+                    val stroke = 1.5.dp.toPx()
+                    // Keep the full stroke visible when the goal sits at the top of the scale.
+                    val y = (size.height - (goal / max) * size.height).coerceAtLeast(stroke / 2f)
+                    drawLine(
+                        color = goalLineColor.copy(alpha = 0.8f),
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())),
+                    )
+                }
             }
-            if (goal != null && goal > 0f) {
-                val stroke = 1.5.dp.toPx()
-                // Keep the full stroke visible when the goal sits at the top of the scale.
-                val y = (size.height - (goal / max) * size.height).coerceAtLeast(stroke / 2f)
-                drawLine(
-                    color = goalLineColor.copy(alpha = 0.8f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = stroke,
-                    cap = StrokeCap.Round,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())),
-                )
+            if (onSelect != null) {
+                // One full-height hit target per bar slot; tapping the selected bar clears it.
+                Row(Modifier.fillMaxSize()) {
+                    points.indices.forEach { i ->
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .selectable(
+                                    selected = i == selected,
+                                    interactionSource = null,
+                                    indication = null,
+                                    onClick = { onSelect(if (i == selected) null else i) },
+                                )
+                                .semantics { contentDescription = barDescription(i) },
+                        )
+                    }
+                }
             }
         }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth()) {
-            points.forEach { p ->
+            points.forEachIndexed { i, p ->
                 Text(
                     text = p.label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (i == selected) color else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (i == selected) FontWeight.Bold else null,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
