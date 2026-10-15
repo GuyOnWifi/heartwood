@@ -4,6 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/GuyOnWifi/heartwood)](https://github.com/GuyOnWifi/heartwood/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/github/license/GuyOnWifi/heartwood)](LICENSE)
 ![minSdk 30](https://img.shields.io/badge/minSdk-30-3DDC84?logo=android&logoColor=white)
+[![Translation status](https://translate.codeberg.org/widget/heartwood/svg-badge.svg)](https://translate.codeberg.org/engage/heartwood/)
 
 A private, **read-only** [Health Connect](https://developer.android.com/health-connect)
 viewer for Android, built with Jetpack Compose and Material You. Heartwood shows the health
@@ -116,6 +117,19 @@ signs its own builds.
 - **CI** (`.github/workflows/ci.yml`), builds + lints the debug APK on every push/PR.
 - **Release** (`.github/workflows/release.yml`), on a `v*` tag, builds the release APK
   (signed if secrets are present) and attaches it to a GitHub Release.
+
+## Translations
+
+Heartwood is translated on [Codeberg Translate](https://translate.codeberg.org/engage/heartwood/).
+Sign in with a Codeberg account to translate in your browser or start a new language; no Git
+needed. Translations are pushed to the `weblate-translations` branch and merged into `main`
+from there, so please don't edit `values-*/strings.xml` by pull request; the change would conflict
+with Weblate.
+
+App strings live in `app/src/main/res/values/strings.xml`. When adding UI text, put it there and
+reference it with `stringResource(R.string.…)` rather than hardcoding it.
+
+[![Translation status](https://translate.codeberg.org/widget/heartwood/multi-auto.svg)](https://translate.codeberg.org/engage/heartwood/)
 
 ## F-Droid
 
