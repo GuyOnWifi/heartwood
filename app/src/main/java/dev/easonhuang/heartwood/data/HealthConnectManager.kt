@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.text.format.DateFormat
 import androidx.health.connect.client.HealthConnectClient
+import dev.easonhuang.heartwood.R
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
@@ -62,6 +63,10 @@ class HealthConnectManager(
     private val timeFmt: DateTimeFormatter
         get() = localizedFormatter(if (DateFormat.is24HourFormat(context)) "Hm" else "hm")
 
+    private fun str(id: Int, vararg args: Any): String = context.getString(id, *args)
+    private fun withUnit(value: String, metric: Metric): String =
+        str(R.string.value_with_unit, value, metric.unit(context))
+
     val client: HealthConnectClient by lazy {
         clientOverride ?: HealthConnectClient.getOrCreate(context)
     }
@@ -99,7 +104,7 @@ class HealthConnectManager(
                 MetricSummary(metric, "-", null, hasData = false, granted = false)
             } else {
                 runCatching { summarize(metric) }
-                    .getOrElse { MetricSummary(metric, "-", "No data", hasData = false, granted = true) }
+                    .getOrElse { MetricSummary(metric, "-", str(R.string.no_data), hasData = false, granted = true) }
             }
         }
     }
@@ -110,7 +115,7 @@ class HealthConnectManager(
 
         val points = series(metric, days = 7)
         if (points.isEmpty()) {
-            return MetricSummary(metric, "-", "No data", hasData = false, granted = true)
+            return MetricSummary(metric, "-", str(R.string.no_data), hasData = false, granted = true)
         }
         val spark = points.map { it.value }
         return when (metric.kind) {
@@ -120,7 +125,7 @@ class HealthConnectManager(
                 MetricSummary(
                     metric = metric,
                     value = metric.formatValue(today),
-                    caption = "7-day avg ${metric.formatValue(avg)} ${metric.unit}",
+                    caption = str(R.string.summary_7day_avg, withUnit(metric.formatValue(avg), metric)),
                     hasData = true,
                     granted = true,
                     spark = spark,
@@ -131,7 +136,7 @@ class HealthConnectManager(
                 MetricSummary(
                     metric = metric,
                     value = metric.formatValue(last.value),
-                    caption = "as of ${dayFmt.format(last.time.atZone(zone))}",
+                    caption = str(R.string.summary_as_of, dayFmt.format(last.time.atZone(zone))),
                     hasData = true,
                     granted = true,
                     spark = spark,
@@ -146,15 +151,15 @@ class HealthConnectManager(
             .flatMap { it.samples }
             .sortedBy { it.time }
         if (samples.isEmpty()) {
-            return MetricSummary(Metric.HEART_RATE, "-", "No data", false, granted = true)
+            return MetricSummary(Metric.HEART_RATE, "-", str(R.string.no_data), false, granted = true)
         }
         val latest = samples.last()
         val today = LocalDate.now()
         val todays = samples.filter { it.time.atZone(zone).toLocalDate() == today }.map { it.beatsPerMinute }
         val caption = if (todays.isNotEmpty()) {
-            "avg ${todays.average().toInt()}, ${todays.min()}-${todays.max()} bpm today"
+            str(R.string.summary_hr_today, todays.average().toInt(), todays.min(), todays.max())
         } else {
-            "latest ${dayMonthTime(latest.time)}"
+            str(R.string.summary_latest_at, dayMonthTime(latest.time))
         }
         return MetricSummary(
             metric = Metric.HEART_RATE,
@@ -171,11 +176,11 @@ class HealthConnectManager(
             .filterIsInstance<BloodPressureRecord>()
             .sortedBy { it.time }
         val last = recs.lastOrNull()
-            ?: return MetricSummary(Metric.BLOOD_PRESSURE, "-", "No data", false, granted = true)
+            ?: return MetricSummary(Metric.BLOOD_PRESSURE, "-", str(R.string.no_data), false, granted = true)
         return MetricSummary(
             metric = Metric.BLOOD_PRESSURE,
             value = "${last.systolic.inMillimetersOfMercury.toInt()}/${last.diastolic.inMillimetersOfMercury.toInt()}",
-            caption = "as of ${dayFmt.format(last.time.atZone(zone))}",
+            caption = str(R.string.summary_as_of, dayFmt.format(last.time.atZone(zone))),
             hasData = true,
             granted = true,
             spark = recs.map { it.systolic.inMillimetersOfMercury.toFloat() },
@@ -191,7 +196,7 @@ class HealthConnectManager(
         val days = if (metric.kind == MetricKind.DAILY_TOTAL) 14 else 90
         val points = series(metric, days)
         if (points.isEmpty()) {
-            return MetricDetail(metric, "-", "No data recorded", emptyList())
+            return MetricDetail(metric, "-", str(R.string.no_data_recorded), emptyList())
         }
         val values = points.map { it.value }
         val headline: String
@@ -199,23 +204,23 @@ class HealthConnectManager(
         val stats: List<Pair<String, String>>
         if (metric.kind == MetricKind.DAILY_TOTAL) {
             headline = metric.formatValue(points.last().value)
-            caption = "Today, ${metric.unit}"
+            caption = str(R.string.detail_today_unit, metric.unit(context))
             stats = listOf(
-                "Daily avg" to "${metric.formatValue(values.average().toFloat())} ${metric.unit}",
-                "Best day" to "${metric.formatValue(values.max())} ${metric.unit}",
-                "14-day total" to "${metric.formatValue(values.sum())} ${metric.unit}",
+                str(R.string.stat_daily_avg) to withUnit(metric.formatValue(values.average().toFloat()), metric),
+                str(R.string.stat_best_day) to withUnit(metric.formatValue(values.max()), metric),
+                str(R.string.stat_14day_total) to withUnit(metric.formatValue(values.sum()), metric),
             )
         } else {
-            headline = "${metric.formatValue(points.last().value)} ${metric.unit}"
-            caption = "Latest, ${dayFmt.format(points.last().time.atZone(zone))}"
+            headline = withUnit(metric.formatValue(points.last().value), metric)
+            caption = str(R.string.detail_latest_at, dayFmt.format(points.last().time.atZone(zone)))
             stats = listOf(
-                "Average" to "${metric.formatValue(values.average().toFloat())} ${metric.unit}",
-                "Min" to "${metric.formatValue(values.min())} ${metric.unit}",
-                "Max" to "${metric.formatValue(values.max())} ${metric.unit}",
+                str(R.string.stat_average) to withUnit(metric.formatValue(values.average().toFloat()), metric),
+                str(R.string.stat_min) to withUnit(metric.formatValue(values.min()), metric),
+                str(R.string.stat_max) to withUnit(metric.formatValue(values.max()), metric),
             )
         }
         val recent = points.takeLast(20).reversed().map {
-            RecordRow("${metric.formatValue(it.value)} ${metric.unit}", dayMonthTime(it.time))
+            RecordRow(withUnit(metric.formatValue(it.value), metric), dayMonthTime(it.time))
         }
         return MetricDetail(metric, headline, caption, points, stats, recent)
     }
@@ -225,23 +230,23 @@ class HealthConnectManager(
             .filterIsInstance<HeartRateRecord>()
             .flatMap { it.samples }
             .sortedBy { it.time }
-        if (samples.isEmpty()) return MetricDetail(Metric.HEART_RATE, "-", "No data", emptyList())
+        if (samples.isEmpty()) return MetricDetail(Metric.HEART_RATE, "-", str(R.string.no_data), emptyList())
         val points = samples.map {
             SeriesPoint(it.time, it.beatsPerMinute.toFloat(), timeFmt.format(it.time.atZone(zone)))
         }
         val bpm = samples.map { it.beatsPerMinute }
         return MetricDetail(
             metric = Metric.HEART_RATE,
-            headline = "${samples.last().beatsPerMinute} bpm",
-            caption = "Latest reading",
+            headline = withUnit(samples.last().beatsPerMinute.toString(), Metric.HEART_RATE),
+            caption = str(R.string.detail_latest_reading),
             points = points,
             stats = listOf(
-                "Average" to "${bpm.average().toInt()} bpm",
-                "Min" to "${bpm.min()} bpm",
-                "Max" to "${bpm.max()} bpm",
+                str(R.string.stat_average) to withUnit(bpm.average().toInt().toString(), Metric.HEART_RATE),
+                str(R.string.stat_min) to withUnit(bpm.min().toString(), Metric.HEART_RATE),
+                str(R.string.stat_max) to withUnit(bpm.max().toString(), Metric.HEART_RATE),
             ),
             recent = points.takeLast(30).reversed().map {
-                RecordRow("${it.value.toInt()} bpm", dayMonthTime(it.time))
+                RecordRow(withUnit(it.value.toInt().toString(), Metric.HEART_RATE), dayMonthTime(it.time))
             },
         )
     }
@@ -250,24 +255,24 @@ class HealthConnectManager(
         val recs = read(BloodPressureRecord::class, daysAgoStart(90), Instant.now())
             .filterIsInstance<BloodPressureRecord>()
             .sortedBy { it.time }
-        if (recs.isEmpty()) return MetricDetail(Metric.BLOOD_PRESSURE, "-", "No data", emptyList())
+        if (recs.isEmpty()) return MetricDetail(Metric.BLOOD_PRESSURE, "-", str(R.string.no_data), emptyList())
         val points = recs.map {
             SeriesPoint(it.time, it.systolic.inMillimetersOfMercury.toFloat(), dayFmt.format(it.time.atZone(zone)))
         }
         val last = recs.last()
         return MetricDetail(
             metric = Metric.BLOOD_PRESSURE,
-            headline = "${last.systolic.inMillimetersOfMercury.toInt()}/${last.diastolic.inMillimetersOfMercury.toInt()} mmHg",
-            caption = "Latest, ${dayFmt.format(last.time.atZone(zone))}",
+            headline = withUnit("${last.systolic.inMillimetersOfMercury.toInt()}/${last.diastolic.inMillimetersOfMercury.toInt()}", Metric.BLOOD_PRESSURE),
+            caption = str(R.string.detail_latest_at, dayFmt.format(last.time.atZone(zone))),
             points = points,
             stats = listOf(
-                "Avg systolic" to "${recs.map { it.systolic.inMillimetersOfMercury }.average().toInt()} mmHg",
-                "Avg diastolic" to "${recs.map { it.diastolic.inMillimetersOfMercury }.average().toInt()} mmHg",
-                "Readings" to "${recs.size}",
+                str(R.string.stat_avg_systolic) to withUnit(recs.map { it.systolic.inMillimetersOfMercury }.average().toInt().toString(), Metric.BLOOD_PRESSURE),
+                str(R.string.stat_avg_diastolic) to withUnit(recs.map { it.diastolic.inMillimetersOfMercury }.average().toInt().toString(), Metric.BLOOD_PRESSURE),
+                str(R.string.stat_readings) to "${recs.size}",
             ),
             recent = recs.takeLast(20).reversed().map {
                 RecordRow(
-                    "${it.systolic.inMillimetersOfMercury.toInt()}/${it.diastolic.inMillimetersOfMercury.toInt()} mmHg",
+                    withUnit("${it.systolic.inMillimetersOfMercury.toInt()}/${it.diastolic.inMillimetersOfMercury.toInt()}", Metric.BLOOD_PRESSURE),
                     dayMonthTime(it.time),
                 )
             },
@@ -467,7 +472,7 @@ class HealthConnectManager(
 
     private fun dayMonthTime(t: Instant): String {
         val z = t.atZone(zone)
-        return "${dayFmt.format(z)}, ${timeFmt.format(z)}"
+        return str(R.string.day_and_time, dayFmt.format(z), timeFmt.format(z))
     }
 
     companion object {

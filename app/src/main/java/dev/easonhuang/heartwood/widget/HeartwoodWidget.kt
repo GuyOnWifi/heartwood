@@ -29,8 +29,11 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import dev.easonhuang.heartwood.HeartwoodApp
 import dev.easonhuang.heartwood.MainActivity
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricSummary
+import dev.easonhuang.heartwood.data.title
+import dev.easonhuang.heartwood.data.unit
 
 /** Preferred metrics to surface on the home screen, in priority order. */
 private val WIDGET_METRICS = listOf(
@@ -68,7 +71,7 @@ private fun WidgetContent(tiles: List<MetricSummary>) {
             .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         Text(
-            text = "Heartwood",
+            text = context.getString(R.string.app_name),
             style = TextStyle(
                 color = GlanceTheme.colors.primary,
                 fontWeight = FontWeight.Bold,
@@ -78,7 +81,7 @@ private fun WidgetContent(tiles: List<MetricSummary>) {
         Spacer(GlanceModifier.height(10.dp))
         if (tiles.isEmpty()) {
             Text(
-                text = "Tap to connect your health data",
+                text = context.getString(R.string.widget_tap_to_connect_data),
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp),
             )
         } else {
@@ -98,6 +101,7 @@ private fun WidgetContent(tiles: List<MetricSummary>) {
 
 @Composable
 private fun Tile(tile: MetricSummary, modifier: GlanceModifier) {
+    val context = LocalContext.current
     Column(
         modifier = modifier
             .background(GlanceTheme.colors.secondaryContainer)
@@ -105,7 +109,7 @@ private fun Tile(tile: MetricSummary, modifier: GlanceModifier) {
             .padding(12.dp),
     ) {
         Text(
-            text = tile.metric.title,
+            text = tile.metric.title(context),
             maxLines = 1,
             style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 12.sp),
         )
@@ -121,7 +125,7 @@ private fun Tile(tile: MetricSummary, modifier: GlanceModifier) {
             )
             Spacer(GlanceModifier.width(3.dp))
             Text(
-                text = tile.metric.unit,
+                text = tile.metric.unit(context),
                 style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 11.sp),
             )
         }

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
@@ -37,7 +38,9 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.lifecycleScope
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.Metric
+import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.ui.theme.HeartwoodTheme
 import kotlinx.coroutines.launch
 
@@ -96,7 +99,7 @@ class MetricWidgetConfigActivity : ComponentActivity() {
 @Composable
 private fun MetricPicker(onPick: (Metric) -> Unit) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Choose a metric") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.widget_choose_metric)) }) },
     ) { inner ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(inner),

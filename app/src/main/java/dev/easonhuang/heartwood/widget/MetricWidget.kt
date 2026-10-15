@@ -39,8 +39,11 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dev.easonhuang.heartwood.HeartwoodApp
 import dev.easonhuang.heartwood.MainActivity
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricKind
+import dev.easonhuang.heartwood.data.title
+import dev.easonhuang.heartwood.data.unit
 
 // Glance per-widget state. The widget renders entirely from this state via currentState(), so a
 // state change (from config or the refresh worker) reactively recomposes the live widget, Glance's
@@ -75,7 +78,7 @@ class MetricWidget : GlanceAppWidget() {
             val detail = if (granted) runCatching { manager.readDetail(metric) }.getOrNull() else null
             val value = when {
                 detail == null -> "-"
-                metric.kind == MetricKind.DAILY_TOTAL -> "${detail.headline} ${metric.unit}"
+                metric.kind == MetricKind.DAILY_TOTAL -> context.getString(R.string.value_with_unit, detail.headline, metric.unit(context))
                 else -> detail.headline
             }
             val points = detail?.points?.map { it.value } ?: emptyList()
@@ -118,18 +121,18 @@ private fun MetricWidgetContent() {
             ),
     ) {
         Text(
-            text = metric.title,
+            text = metric.title(context),
             style = TextStyle(color = ColorProvider(metric.accent), fontWeight = FontWeight.Bold, fontSize = 14.sp),
         )
         Spacer(GlanceModifier.height(2.dp))
         when {
             !granted -> Text(
-                text = "Tap to connect",
+                text = context.getString(R.string.widget_tap_to_connect),
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp),
             )
             points.size < 2 -> {
                 Text(value, style = TextStyle(color = GlanceTheme.colors.onSurface, fontWeight = FontWeight.Bold, fontSize = 30.sp))
-                Text("No recent data", style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp))
+                Text(context.getString(R.string.widget_no_recent_data), style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp))
             }
             else -> {
                 Text(value, style = TextStyle(color = GlanceTheme.colors.onSurface, fontWeight = FontWeight.Bold, fontSize = 30.sp))

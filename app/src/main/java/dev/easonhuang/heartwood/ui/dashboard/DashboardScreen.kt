@@ -24,9 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.DashboardPreferences
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
@@ -52,16 +54,16 @@ fun DashboardScreen(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Heartwood") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onCustomize) {
-                        Icon(Icons.Rounded.Tune, contentDescription = "Customize dashboard")
+                        Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.dashboard_customize))
                     }
                     IconButton(onClick = vm::refresh) {
                         if (refreshing) {
                             CircularProgressIndicator(Modifier.padding(4.dp), strokeWidth = 2.dp)
                         } else {
-                            Icon(Icons.Rounded.Refresh, contentDescription = "Refresh")
+                            Icon(Icons.Rounded.Refresh, contentDescription = stringResource(R.string.action_refresh))
                         }
                     }
                 },

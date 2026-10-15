@@ -1,8 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Heartwood</string>
+    <string name="app_name" translatable="false">Heartwood</string>
     <string name="widget_dashboard_name">Heartwood dashboard</string>
     <string name="widget_metric_name">Heartwood metric</string>
     <string name="widget_description">Glanceable health metrics from Health Connect.</string>
     <string name="metric_widget_description">A single health metric with a graph, pick which one.</string>
+
+    <!-- Metric names -->
+    <string name="metric_steps">Steps</string>
+    <string name="metric_distance">Distance</string>
+    <string name="metric_active_calories">Active energy</string>
+    <string name="metric_total_calories">Total energy</string>
+    <string name="metric_floors">Floors climbed</string>
+    <string name="metric_exercise">Exercise</string>
+    <string name="metric_hydration">Hydration</string>
+    <string name="metric_heart_rate">Heart rate</string>
+    <string name="metric_resting_heart_rate">Resting heart rate</string>
+    <string name="metric_hrv">Heart rate variability</string>
+    <string name="metric_sleep">Sleep</string>
+    <string name="metric_oxygen">Blood oxygen</string>
+    <string name="metric_respiratory">Respiratory rate</string>
+    <string name="metric_vo2max">VO₂ max</string>
+    <string name="metric_weight">Weight</string>
+    <string name="metric_height">Height</string>
+    <string name="metric_blood_pressure">Blood pressure</string>
+    <string name="metric_blood_glucose">Blood glucose</string>
+
+    <!-- Units, shown after a number, e.g. "8,432 steps" -->
+    <string name="unit_steps">steps</string>
+    <string name="unit_km">km</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="unit_floors">floors</string>
+    <string name="unit_min">min</string>
+    <string name="unit_liters">L</string>
+    <string name="unit_bpm">bpm</string>
+    <string name="unit_ms">ms</string>
+    <string name="unit_hours">h</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_breaths_per_min">br/min</string>
+    <string name="unit_vo2max">mL/kg/min</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_mmhg">mmHg</string>
+    <string name="unit_mg_dl">mg/dL</string>
+    <!-- A formatted number followed by its unit, e.g. "70.0 kg" -->
+    <string name="value_with_unit">%1$s %2$s</string>
+
+    <!-- Navigation -->
+    <string name="nav_today">Today</string>
+    <string name="nav_summary">Summary</string>
+    <string name="nav_settings">Settings</string>
+    <string name="action_back">Back</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to Heartwood</string>
+    <string name="onboarding_welcome_body">A private, open-source window into your Health Connect data. Heartwood only reads, nothing ever leaves your device.</string>
+    <string name="onboarding_connect">Connect Health Connect</string>
+    <string name="onboarding_hc_needed_title">Health Connect needed</string>
+    <string name="onboarding_hc_needed_body">Heartwood reads your data through Health Connect. Please install or update it to continue.</string>
+    <string name="onboarding_get_hc">Get Health Connect</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_customize">Customize dashboard</string>
+    <string name="dashboard_reorder">Reorder %1$s</string>
+    <string name="card_locked">Locked</string>
+    <string name="card_tap_to_grant">Tap to grant access</string>
+
+    <!-- Metric summaries and details -->
+    <string name="no_data">No data</string>
+    <string name="no_data_recorded">No data recorded</string>
+    <string name="summary_7day_avg">7-day avg %1$s</string>
+    <string name="summary_as_of">as of %1$s</string>
+    <string name="summary_hr_today">avg %1$d, %2$d-%3$d bpm today</string>
+    <string name="summary_latest_at">latest %1$s</string>
+    <string name="detail_today_unit">Today, %1$s</string>
+    <string name="detail_latest_at">Latest, %1$s</string>
+    <string name="detail_latest_reading">Latest reading</string>
+    <string name="detail_recent_records">Recent records</string>
+    <string name="stat_daily_avg">Daily avg</string>
+    <string name="stat_best_day">Best day</string>
+    <string name="stat_14day_total">14-day total</string>
+    <string name="stat_average">Average</string>
+    <string name="stat_min">Min</string>
+    <string name="stat_max">Max</string>
+    <string name="stat_avg_systolic">Avg systolic</string>
+    <string name="stat_avg_diastolic">Avg diastolic</string>
+    <string name="stat_readings">Readings</string>
+    <!-- Day and time of a record, e.g. "Mar 2, 9:30 AM" -->
+    <string name="day_and_time">%1$s, %2$s</string>
+
+    <!-- Charts -->
+    <string name="chart_not_enough_data">Not enough data to chart</string>
+    <string name="chart_max">max %1$s</string>
+    <string name="chart_min">min %1$s</string>
+
+    <!-- Weekly summary -->
+    <string name="summary_title">This week</string>
+    <string name="summary_subtitle">Daily averages vs your goals</string>
+    <string name="summary_progress">%1$s / %2$s %3$s avg/day</string>
+    <string name="summary_edit_goal">Edit goal</string>
+    <plurals name="summary_chart_description">
+        <item quantity="one">%1$s over the last %2$d day</item>
+        <item quantity="other">%1$s over the last %2$d days</item>
+    </plurals>
+    <plurals name="summary_chart_goal_met">
+        <item quantity="one">%1$s over the last %3$d day: goal met on %2$d of %3$d day</item>
+        <item quantity="other">%1$s over the last %3$d days: goal met on %2$d of %3$d days</item>
+    </plurals>
+    <string name="trend_new">New this week</string>
+    <string name="trend_up">+%1$d%% vs last week</string>
+    <string name="trend_down">%1$d%% vs last week</string>
+    <string name="trend_steady">Steady vs last week</string>
+    <string name="summary_empty_title">No goal-tracked data yet</string>
+    <string name="summary_empty_body">Grant access to steps, energy, distance, exercise, hydration or floors to see weekly progress.</string>
+    <string name="goal_dialog_title">%1$s goal</string>
+    <string name="goal_dialog_daily_target">Daily target in %1$s</string>
+
+    <!-- Settings -->
+    <string name="settings_section_data">Data</string>
+    <string name="settings_manage_access">Manage data access</string>
+    <string name="settings_manage_access_summary">Choose which health data Heartwood can read</string>
+    <string name="settings_open_hc">Open Health Connect</string>
+    <string name="settings_open_hc_summary">Manage all apps, data sources and stored data</string>
+    <string name="settings_open_hc_failed">Couldn\'t open Health Connect</string>
+    <string name="settings_export">Export data</string>
+    <string name="settings_export_summary">Save your accessible data to a file (CSV or JSON)</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Heartwood %1$s</string>
+    <string name="settings_version_summary">Private, read-only Health Connect viewer</string>
+    <string name="settings_open_source">Open source</string>
+    <string name="settings_open_source_summary">GPL-3.0-or-later, view the code</string>
+    <string name="settings_privacy_note">Heartwood never sends your data anywhere. Everything stays on this device.</string>
+    <string name="export_dialog_title">Export format</string>
+    <string name="export_dialog_body">Choose how to save your data.</string>
+    <string name="export_nothing">No accessible data to export</string>
+    <plurals name="export_success">
+        <item quantity="one">Exported %1$d record as %2$s</item>
+        <item quantity="other">Exported %1$d records as %2$s</item>
+    </plurals>
+    <string name="export_failed">Export failed: %1$s</string>
+
+    <!-- Widgets -->
+    <string name="widget_choose_metric">Choose a metric</string>
+    <string name="widget_tap_to_connect_data">Tap to connect your health data</string>
+    <string name="widget_tap_to_connect">Tap to connect</string>
+    <string name="widget_no_recent_data">No recent data</string>
 </resources>

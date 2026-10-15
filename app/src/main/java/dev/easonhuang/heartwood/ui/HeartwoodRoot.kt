@@ -3,6 +3,7 @@ package dev.easonhuang.heartwood.ui
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Insights
@@ -25,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import dev.easonhuang.heartwood.R
 import kotlinx.coroutines.launch
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -49,10 +52,10 @@ import dev.easonhuang.heartwood.ui.summary.SummaryScreen
 
 private const val HEALTH_CONNECT_PACKAGE = "com.google.android.apps.healthdata"
 
-private enum class Dest(val route: String, val label: String, val icon: ImageVector) {
-    TODAY("today", "Today", Icons.Rounded.Today),
-    SUMMARY("summary", "Summary", Icons.Rounded.Insights),
-    SETTINGS("settings", "Settings", Icons.Rounded.Settings),
+private enum class Dest(val route: String, @StringRes val label: Int, val icon: ImageVector) {
+    TODAY("today", R.string.nav_today, Icons.Rounded.Today),
+    SUMMARY("summary", R.string.nav_summary, Icons.Rounded.Insights),
+    SETTINGS("settings", R.string.nav_settings, Icons.Rounded.Settings),
 }
 
 @Composable
@@ -214,8 +217,8 @@ private fun MainNav(
                                     restoreState = true
                                 }
                             },
-                            icon = { Icon(dest.icon, contentDescription = dest.label) },
-                            label = { Text(dest.label) },
+                            icon = { Icon(dest.icon, contentDescription = stringResource(dest.label)) },
+                            label = { Text(stringResource(dest.label)) },
                         )
                     }
                 }
