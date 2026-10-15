@@ -23,7 +23,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -186,7 +185,6 @@ class HealthConnectManagerTest {
 
     // ---- Pagination ----------------------------------------------------------------------------
 
-    @Ignore("Reads only fetch the first 1000-record page on main; fixed on fix/paginate-reads")
     @Test
     fun readsFollowPageTokensPastTheFirstThousandRecords() = runTest {
         val start = today.minusDays(30).atStartOfDay(zone).toInstant()

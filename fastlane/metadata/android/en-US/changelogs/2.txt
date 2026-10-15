@@ -1,0 +1,8 @@
+- Now runs on Android 9 and 10
+- Edit the Today dashboard in place: long-press to rearrange or hide cards
+- Goal lines on Summary charts; tap a bar to see that day's value
+- Exports now include all records, not just the first 1,000
+- Sleep is dated by the day you wake up
+- Dates and times follow your locale and 12/24-hour setting
+- Per-app language support, ready for translations
+- Removed a leftover network-state permission
