@@ -110,6 +110,11 @@
         <item quantity="one">%1$s over the last %3$d day: goal met on %2$d of %3$d day</item>
         <item quantity="other">%1$s over the last %3$d days: goal met on %2$d of %3$d days</item>
     </plurals>
+    <!-- Tapped bar on a weekly chart: date, then value, e.g. "Wed, Oct 14: 8,432 steps" -->
+    <string name="summary_bar_value">%1$s: %2$s</string>
+    <string name="summary_bar_goal_met">Goal met</string>
+    <!-- How far a day fell short, e.g. "1,568 steps below goal" -->
+    <string name="summary_bar_below_goal">%1$s below goal</string>
     <string name="trend_new">New this week</string>
     <string name="trend_up">+%1$d%% vs last week</string>
     <string name="trend_down">%1$d%% vs last week</string>
