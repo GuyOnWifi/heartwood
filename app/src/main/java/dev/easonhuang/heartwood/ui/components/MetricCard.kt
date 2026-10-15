@@ -22,9 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.MetricSummary
+import dev.easonhuang.heartwood.data.title
+import dev.easonhuang.heartwood.data.unit
 
 @Composable
 fun MetricCard(summary: MetricSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -66,7 +70,7 @@ fun MetricCard(summary: MetricSummary, onClick: () -> Unit, modifier: Modifier =
             Spacer(Modifier.height(2.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = if (locked) "Locked" else summary.value,
+                    text = if (locked) stringResource(R.string.card_locked) else summary.value,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -86,7 +90,7 @@ fun MetricCard(summary: MetricSummary, onClick: () -> Unit, modifier: Modifier =
                 Sparkline(summary.spark, accent, Modifier.fillMaxWidth().height(28.dp))
             } else {
                 Text(
-                    text = if (locked) "Tap to grant access" else (summary.caption ?: ""),
+                    text = if (locked) stringResource(R.string.card_tap_to_grant) else (summary.caption ?: ""),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

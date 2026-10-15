@@ -48,11 +48,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
 import dev.easonhuang.heartwood.BuildConfig
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.ExportFormat
 import dev.easonhuang.heartwood.data.ExportManager
 import dev.easonhuang.heartwood.data.HealthConnectManager
@@ -70,6 +73,7 @@ fun SettingsScreen(
     onManagePermissions: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -79,11 +83,13 @@ fun SettingsScreen(
         val granted = runCatching { manager.grantedPermissions() }.getOrDefault(emptySet())
         val metrics = Metric.entries.filter { manager.permissionFor(it) in granted }
         if (metrics.isEmpty()) {
-            snackbar.showSnackbar("No accessible data to export"); return
+            snackbar.showSnackbar(resources.getString(R.string.export_nothing)); return
         }
         exporter.export(uri, metrics, format).fold(
-            onSuccess = { count -> snackbar.showSnackbar("Exported $count records as ${format.label}") },
-            onFailure = { snackbar.showSnackbar("Export failed: ${it.message}") },
+            onSuccess = { count -> snackbar.showSnackbar(
+                    resources.getQuantityString(R.plurals.export_success, count, count, format.label)
+                ) },
+            onFailure = { snackbar.showSnackbar(resources.getString(R.string.export_failed, it.message)) },
         )
     }
 
@@ -96,7 +102,7 @@ fun SettingsScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { LargeTopAppBar(title = { Text("Settings") }, scrollBehavior = scrollBehavior) },
+        topBar = { LargeTopAppBar(title = { Text(stringResource(R.string.nav_settings)) }, scrollBehavior = scrollBehavior) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { inner ->
         LazyColumn(
@@ -104,45 +110,45 @@ fun SettingsScreen(
             contentPadding = PaddingValues(top = inner.calculateTopPadding(), bottom = bottomInset + 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { SectionLabel("Data") }
+            item { SectionLabel(stringResource(R.string.settings_section_data)) }
             item {
                 SettingsCard {
                     SettingRow(
                         icon = Icons.Rounded.Lock,
-                        title = "Manage data access",
-                        subtitle = "Choose which health data Heartwood can read",
+                        title = stringResource(R.string.settings_manage_access),
+                        subtitle = stringResource(R.string.settings_manage_access_summary),
                         onClick = onManagePermissions,
                     )
                     SettingRow(
                         icon = Icons.Rounded.MonitorHeart,
-                        title = "Open Health Connect",
-                        subtitle = "Manage all apps, data sources and stored data",
+                        title = stringResource(R.string.settings_open_hc),
+                        subtitle = stringResource(R.string.settings_open_hc_summary),
                         onClick = {
                             runCatching { context.startActivity(HealthConnectManager.settingsIntent()) }
-                                .onFailure { scope.launch { snackbar.showSnackbar("Couldn't open Health Connect") } }
+                                .onFailure { scope.launch { snackbar.showSnackbar(resources.getString(R.string.settings_open_hc_failed)) } }
                         },
                     )
                     SettingRow(
                         icon = Icons.Rounded.Download,
-                        title = "Export data",
-                        subtitle = "Save your accessible data to a file (CSV or JSON)",
+                        title = stringResource(R.string.settings_export),
+                        subtitle = stringResource(R.string.settings_export_summary),
                         onClick = { showFormatDialog = true },
                     )
                 }
             }
-            item { SectionLabel("About") }
+            item { SectionLabel(stringResource(R.string.settings_section_about)) }
             item {
                 SettingsCard {
                     SettingRow(
                         icon = Icons.Rounded.HealthAndSafety,
-                        title = "Heartwood ${BuildConfig.VERSION_NAME}",
-                        subtitle = "Private, read-only Health Connect viewer",
+                        title = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
+                        subtitle = stringResource(R.string.settings_version_summary),
                         onClick = {},
                     )
                     SettingRow(
                         icon = Icons.AutoMirrored.Rounded.OpenInNew,
-                        title = "Open source",
-                        subtitle = "GPL-3.0-or-later, view the code",
+                        title = stringResource(R.string.settings_open_source),
+                        subtitle = stringResource(R.string.settings_open_source_summary),
                         onClick = {
                             runCatching {
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(REPO_URL)))
@@ -153,7 +159,7 @@ fun SettingsScreen(
             }
             item {
                 Text(
-                    "Heartwood never sends your data anywhere. Everything stays on this device.",
+                    stringResource(R.string.settings_privacy_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
@@ -165,8 +171,8 @@ fun SettingsScreen(
     if (showFormatDialog) {
         AlertDialog(
             onDismissRequest = { showFormatDialog = false },
-            title = { Text("Export format") },
-            text = { Text("Choose how to save your data.") },
+            title = { Text(stringResource(R.string.export_dialog_title)) },
+            text = { Text(stringResource(R.string.export_dialog_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     showFormatDialog = false

@@ -45,11 +45,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.DashboardPreferences
 import dev.easonhuang.heartwood.data.Metric
+import dev.easonhuang.heartwood.data.title
 import kotlinx.coroutines.launch
 
 private val RowHeight = 64.dp
@@ -93,10 +96,10 @@ fun CustomizeDashboardScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Customize dashboard") },
+                title = { Text(stringResource(R.string.dashboard_customize)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -219,7 +222,7 @@ private fun MetricRow(
         ) {
             Icon(
                 imageVector = Icons.Rounded.DragHandle,
-                contentDescription = "Reorder ${metric.title}",
+                contentDescription = stringResource(R.string.dashboard_reorder, metric.title),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = dragHandleModifier.padding(end = 8.dp),
             )

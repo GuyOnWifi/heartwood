@@ -74,6 +74,18 @@ android {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
+    // Lists the app's translations (res/values-*) so Android 13+ offers a per-app language
+    // setting. The default locale comes from res/resources.properties.
+    androidResources {
+        generateLocaleConfig = true
+    }
+
+    // Translations arrive incrementally from Weblate; a partly translated language falls back
+    // to English rather than failing the build.
+    lint {
+        warning += "MissingTranslation"
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

@@ -14,9 +14,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.WeeklyStat
+import dev.easonhuang.heartwood.data.title
+import dev.easonhuang.heartwood.data.unit
 
 @Composable
 fun GoalEditDialog(
@@ -31,10 +35,10 @@ fun GoalEditDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${stat.metric.title} goal") },
+        title = { Text(stringResource(R.string.goal_dialog_title, stat.metric.title)) },
         text = {
             Column {
-                Text("Daily target in ${stat.metric.unit}")
+                Text(stringResource(R.string.goal_dialog_daily_target, stat.metric.unit))
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = text,
@@ -48,8 +52,8 @@ fun GoalEditDialog(
         confirmButton = {
             TextButton(
                 onClick = { text.toFloatOrNull()?.let { onSave(it) } ?: onDismiss() },
-            ) { Text("Save") }
+            ) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
