@@ -16,7 +16,7 @@ anywhere.
 <p align="center">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="24%" alt="Today dashboard" />
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="24%" alt="Heart rate detail" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="24%" alt="Weekly summary with goal lines" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="24%" alt="Weekly summary with a day selected" />
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="24%" alt="Today dashboard in dark theme" />
 </p>
 
@@ -32,11 +32,11 @@ read it all here.
 ## Features
 
 - **Today**, Material You cards for steps, heart rate, sleep, energy, distance, exercise,
-  SpO₂, weight, blood pressure and more, each with a sparkline. Reorder or hide cards to keep
-  only what you track.
+  SpO₂, weight, blood pressure and more, each with a sparkline. Long-press to rearrange or
+  hide cards right on the grid, keeping only what you track.
 - **Detail views**, full charts, statistics and recent records per metric.
 - **Weekly summary**, daily averages vs. goals you set, with progress rings, goal lines and
-  week-over-week trends.
+  week-over-week trends. Tap a bar to see that day's value.
 - **Home-screen widgets**, key metrics, dynamically themed (Glance + Material 3).
 - **Export**, save your accessible data to CSV or JSON via the system file picker.
 - **Private by design**, read-only Health Connect permissions and no network permission at
@@ -44,7 +44,7 @@ read it all here.
 
 <p align="center">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="24%" alt="Sleep detail" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" width="24%" alt="Customize dashboard" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" width="24%" alt="Editing the dashboard" />
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.png" width="24%" alt="Home-screen widget" />
 </p>
 

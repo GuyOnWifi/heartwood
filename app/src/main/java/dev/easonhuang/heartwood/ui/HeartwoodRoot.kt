@@ -41,7 +41,6 @@ import dev.easonhuang.heartwood.data.ExportManager
 import dev.easonhuang.heartwood.data.GoalsRepository
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
-import dev.easonhuang.heartwood.ui.dashboard.CustomizeDashboardScreen
 import dev.easonhuang.heartwood.ui.dashboard.DashboardScreen
 import dev.easonhuang.heartwood.ui.detail.DetailScreen
 import dev.easonhuang.heartwood.ui.onboarding.LoadingScreen
@@ -238,14 +237,6 @@ private fun MainNav(
                     bottomInset = bottomInset,
                     onOpenMetric = { metric -> navController.navigate("detail/${metric.key}") },
                     onManagePermissions = onManagePermissions,
-                    onCustomize = { navController.navigate("customize") },
-                )
-            }
-            composable("customize") {
-                CustomizeDashboardScreen(
-                    dashboardPrefs = dashboardPrefs,
-                    bottomInset = bottomInset,
-                    onBack = { navController.popBackStack() },
                 )
             }
             composable(Dest.SUMMARY.route) {
