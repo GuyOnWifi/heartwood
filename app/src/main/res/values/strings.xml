@@ -54,6 +54,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_done">Done</string>
 
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Welcome to Heartwood</string>
@@ -65,7 +66,14 @@
 
     <!-- Dashboard -->
     <string name="dashboard_customize">Customize dashboard</string>
-    <string name="dashboard_reorder">Reorder %1$s</string>
+    <string name="dashboard_edit_title">Edit dashboard</string>
+    <string name="dashboard_edit_hint">Hold and drag cards to rearrange them.</string>
+    <string name="dashboard_hidden_header">Hidden</string>
+    <!-- %1$s is a metric name, e.g. "Hide Steps" -->
+    <string name="dashboard_hide">Hide %1$s</string>
+    <string name="dashboard_show">Show %1$s</string>
+    <string name="dashboard_move_earlier">Move earlier</string>
+    <string name="dashboard_move_later">Move later</string>
     <string name="card_locked">Locked</string>
     <string name="card_tap_to_grant">Tap to grant access</string>
 

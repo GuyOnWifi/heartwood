@@ -12,6 +12,7 @@ work = "2.10.5"
 coroutines = "1.10.2"
 datastore = "1.1.7"
 splashscreen = "1.0.1"
+reorderable = "3.1.0"
 junit = "4.13.2"
 # Latest testing artifact that targets the 1.1.x client (it pins 1.1.0-beta02; the 1.1.0 client wins).
 healthConnectTesting = "1.0.0-alpha03"
@@ -19,6 +20,7 @@ robolectric = "4.17"
 androidxTestCore = "1.7.0"
 
 [libraries]
+reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }

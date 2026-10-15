@@ -1,6 +1,8 @@
 package dev.easonhuang.heartwood.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,14 +32,23 @@ import dev.easonhuang.heartwood.data.MetricSummary
 import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.data.unit
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MetricCard(summary: MetricSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun MetricCard(
+    summary: MetricSummary,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+) {
     val accent = summary.metric.accent
     val locked = !summary.granted
+    val shape = MaterialTheme.shapes.extraLarge
     Card(
-        onClick = onClick,
-        modifier = modifier.height(168.dp),
-        shape = MaterialTheme.shapes.extraLarge,
+        modifier = modifier
+            .height(168.dp)
+            .clip(shape)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
