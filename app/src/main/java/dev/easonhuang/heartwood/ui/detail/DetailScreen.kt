@@ -32,17 +32,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.background
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricDetail
 import dev.easonhuang.heartwood.data.MetricKind
 import dev.easonhuang.heartwood.data.RecordRow
 import dev.easonhuang.heartwood.data.formatValue
+import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.ui.DetailViewModel
 import dev.easonhuang.heartwood.ui.components.BarChart
 import dev.easonhuang.heartwood.ui.components.LineChart
@@ -67,7 +70,7 @@ fun DetailScreen(
                 title = { Text(metric.title) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -91,7 +94,7 @@ fun DetailScreen(
             if (d.recent.isNotEmpty()) {
                 item {
                     Text(
-                        "Recent records",
+                        stringResource(R.string.detail_recent_records),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(horizontal = 20.dp),
                     )

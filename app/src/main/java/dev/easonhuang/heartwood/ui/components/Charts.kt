@@ -23,9 +23,11 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.SeriesPoint
 
 /** Tiny inline trend line for dashboard cards. */
@@ -133,7 +135,7 @@ fun LineChart(
 ) {
     if (points.size < 2) {
         Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Not enough data to chart", style = MaterialTheme.typography.bodyMedium,
+            Text(stringResource(R.string.chart_not_enough_data), style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         return
@@ -143,9 +145,9 @@ fun LineChart(
     val max = values.max()
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("max ${format(max)}", style = MaterialTheme.typography.labelSmall,
+            Text(stringResource(R.string.chart_max, format(max)), style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("min ${format(min)}", style = MaterialTheme.typography.labelSmall,
+            Text(stringResource(R.string.chart_min, format(min)), style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(8.dp))

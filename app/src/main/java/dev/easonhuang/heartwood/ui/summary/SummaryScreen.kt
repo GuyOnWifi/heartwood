@@ -40,6 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -47,10 +49,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.background
+import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.GoalsRepository
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.WeeklyStat
 import dev.easonhuang.heartwood.data.formatValue
+import dev.easonhuang.heartwood.data.title
+import dev.easonhuang.heartwood.data.unit
 import dev.easonhuang.heartwood.ui.components.BarChart
 import dev.easonhuang.heartwood.ui.components.GoalRing
 import kotlin.math.roundToInt
@@ -71,7 +76,7 @@ fun SummaryScreen(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("This week") },
+                title = { Text(stringResource(R.string.summary_title)) },
                 scrollBehavior = scrollBehavior,
             )
         },
@@ -86,7 +91,7 @@ fun SummaryScreen(
         ) {
             item {
                 Text(
-                    "Daily averages vs your goals",
+                    stringResource(R.string.summary_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
@@ -131,7 +136,12 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(stat.metric.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "${stat.metric.formatValue(stat.thisWeekAvg)} / ${stat.metric.formatValue(stat.goal)} ${stat.metric.unit} avg/day",
+                        stringResource(
+                            R.string.summary_progress,
+                            stat.metric.formatValue(stat.thisWeekAvg),
+                            stat.metric.formatValue(stat.goal),
+                            stat.metric.unit,
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -139,14 +149,17 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
                     DeltaChip(stat)
                 }
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Rounded.Edit, contentDescription = "Edit goal", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.summary_edit_goal), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Spacer(Modifier.height(16.dp))
             val days = stat.perDay.size
             val daysMet = stat.perDay.count { it.value >= stat.goal }
-            val chartDescription = "${stat.metric.title} over the last $days days" +
-                if (stat.goal > 0f) ": goal met on $daysMet of $days days" else ""
+            val chartDescription = if (stat.goal > 0f) {
+                pluralStringResource(R.plurals.summary_chart_goal_met, days, stat.metric.title, daysMet, days)
+            } else {
+                pluralStringResource(R.plurals.summary_chart_description, days, stat.metric.title, days)
+            }
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -163,10 +176,10 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
 private fun DeltaChip(stat: WeeklyStat) {
     val delta = stat.deltaPercent
     val (icon, tint, label) = when {
-        delta == null -> Triple(Icons.AutoMirrored.Rounded.TrendingFlat, MaterialTheme.colorScheme.onSurfaceVariant, "New this week")
-        delta >= 1f -> Triple(Icons.AutoMirrored.Rounded.TrendingUp, stat.metric.accent, "+${delta.roundToInt()}% vs last week")
-        delta <= -1f -> Triple(Icons.AutoMirrored.Rounded.TrendingDown, MaterialTheme.colorScheme.error, "${delta.roundToInt()}% vs last week")
-        else -> Triple(Icons.AutoMirrored.Rounded.TrendingFlat, MaterialTheme.colorScheme.onSurfaceVariant, "Steady vs last week")
+        delta == null -> Triple(Icons.AutoMirrored.Rounded.TrendingFlat, MaterialTheme.colorScheme.onSurfaceVariant, stringResource(R.string.trend_new))
+        delta >= 1f -> Triple(Icons.AutoMirrored.Rounded.TrendingUp, stat.metric.accent, stringResource(R.string.trend_up, delta.roundToInt()))
+        delta <= -1f -> Triple(Icons.AutoMirrored.Rounded.TrendingDown, MaterialTheme.colorScheme.error, stringResource(R.string.trend_down, delta.roundToInt()))
+        else -> Triple(Icons.AutoMirrored.Rounded.TrendingFlat, MaterialTheme.colorScheme.onSurfaceVariant, stringResource(R.string.trend_steady))
     }
     Row(
         Modifier
@@ -188,12 +201,12 @@ private fun EmptyState() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "No goal-tracked data yet",
+            stringResource(R.string.summary_empty_title),
             style = MaterialTheme.typography.titleMedium,
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Grant access to steps, energy, distance, exercise, hydration or floors to see weekly progress.",
+            stringResource(R.string.summary_empty_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
