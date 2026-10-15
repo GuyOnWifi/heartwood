@@ -24,10 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
+import dev.easonhuang.heartwood.R
 
 @Composable
 fun LoadingScreen() {
@@ -52,19 +54,18 @@ fun OnboardingScreen(onConnect: () -> Unit) {
             Icon(Icons.Rounded.Favorite, null, tint = accent, modifier = Modifier.size(48.dp))
         }
         Spacer(Modifier.height(28.dp))
-        Text("Welcome to Heartwood", style = MaterialTheme.typography.headlineMedium,
+        Text(stringResource(R.string.onboarding_welcome_title), style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
         Text(
-            "A private, open-source window into your Health Connect data. Heartwood only reads, " +
-                "nothing ever leaves your device.",
+            stringResource(R.string.onboarding_welcome_body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(36.dp))
         Button(onClick = onConnect, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text("Connect Health Connect", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.onboarding_connect), style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -79,18 +80,18 @@ fun UnavailableScreen(onInstall: () -> Unit) {
         Icon(Icons.Rounded.HealthAndSafety, null, tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(72.dp))
         Spacer(Modifier.height(24.dp))
-        Text("Health Connect needed", style = MaterialTheme.typography.headlineSmall,
+        Text(stringResource(R.string.onboarding_hc_needed_title), style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
         Text(
-            "Heartwood reads your data through Health Connect. Please install or update it to continue.",
+            stringResource(R.string.onboarding_hc_needed_body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(28.dp))
         Button(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text("Get Health Connect")
+            Text(stringResource(R.string.onboarding_get_hc))
         }
     }
 }
