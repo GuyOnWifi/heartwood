@@ -4,7 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/GuyOnWifi/heartwood)](https://github.com/GuyOnWifi/heartwood/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/github/license/GuyOnWifi/heartwood)](LICENSE)
 ![minSdk 28](https://img.shields.io/badge/minSdk-28-3DDC84?logo=android&logoColor=white)
-[![Translation status](https://translate.codeberg.org/widget/heartwood/svg-badge.svg)](https://translate.codeberg.org/engage/heartwood/)
+[![Translate on Codeberg Translate](https://img.shields.io/badge/translate-Codeberg%20Translate-2185D0?logo=weblate&logoColor=white)](https://translate.codeberg.org/engage/heartwood/)
 
 A private, **read-only** [Health Connect](https://developer.android.com/health-connect)
 viewer for Android, built with Jetpack Compose and Material You. Heartwood shows the health
@@ -128,8 +128,6 @@ with Weblate.
 
 App strings live in `app/src/main/res/values/strings.xml`. When adding UI text, put it there and
 reference it with `stringResource(R.string.…)` rather than hardcoding it.
-
-[![Translation status](https://translate.codeberg.org/widget/heartwood/multi-auto.svg)](https://translate.codeberg.org/engage/heartwood/)
 
 ## F-Droid
 
