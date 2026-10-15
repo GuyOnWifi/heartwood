@@ -4,27 +4,22 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Tune
@@ -35,10 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -49,9 +42,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -77,8 +68,9 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 
 /**
  * The Today grid. Long-pressing a card (or the tune button) switches it into edit mode in place:
- * cards can be dragged around the real grid, hidden with their − button, and brought back from
- * the Hidden section below. Done or back leaves edit mode; every edit is saved as it happens.
+ * cards can be dragged around the real grid, hidden with their − button, and brought back with
+ * the + on their dimmed tile in the Hidden section below. The check button or back leaves edit
+ * mode; every edit is saved as it happens.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,7 +105,9 @@ fun DashboardScreen(
                 },
                 actions = {
                     if (editing) {
-                        TextButton(onClick = { editing = false }) { Text(stringResource(R.string.action_done)) }
+                        IconButton(onClick = { editing = false }) {
+                            Icon(Icons.Rounded.Check, contentDescription = stringResource(R.string.action_done))
+                        }
                     } else {
                         IconButton(onClick = startEditing) {
                             Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.dashboard_customize))
@@ -232,7 +226,8 @@ private fun EditGrid(
                 val scale by animateFloatAsState(if (isDragging) 1.04f else 1f, label = "scale")
                 EditableCard(
                     summary = all[metric] ?: MetricSummary(metric, "-", null, hasData = false, granted = true),
-                    onHide = { hide(metric) },
+                    hidden = false,
+                    onToggle = { hide(metric) },
                     onMoveEarlier = { move(metric, -1) },
                     onMoveLater = { move(metric, 1) },
                     modifier = Modifier
@@ -255,88 +250,64 @@ private fun EditGrid(
                 )
             }
             items(hidden, key = { "hidden_${it.key}" }) { metric ->
-                HiddenCard(metric, onShow = { show(metric) })
+                EditableCard(
+                    summary = all[metric] ?: MetricSummary(metric, "-", null, hasData = false, granted = true),
+                    hidden = true,
+                    onToggle = { show(metric) },
+                )
             }
         }
     }
 }
 
-/** A dashboard card in edit mode: outlined, with a − button and TalkBack move/hide actions. */
+/**
+ * A dashboard card in edit mode: the real tile with its live data, outlined, plus a corner button
+ * that hides it (−) or, for a [hidden] card, shows it again (+). Hidden cards are dimmed but keep
+ * their data, so they still work as an at-a-glance indicator. TalkBack gets the same actions.
+ */
 @Composable
 private fun EditableCard(
     summary: MetricSummary,
-    onHide: () -> Unit,
-    onMoveEarlier: () -> Unit,
-    onMoveLater: () -> Unit,
+    hidden: Boolean,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    onMoveEarlier: (() -> Unit)? = null,
+    onMoveLater: (() -> Unit)? = null,
 ) {
     val title = summary.metric.title
-    val hideLabel = stringResource(R.string.dashboard_hide, title)
+    val toggleLabel = stringResource(if (hidden) R.string.dashboard_show else R.string.dashboard_hide, title)
     val earlierLabel = stringResource(R.string.dashboard_move_earlier)
     val laterLabel = stringResource(R.string.dashboard_move_later)
     Box(
         modifier
             .fillMaxWidth()
             .semantics {
-                customActions = listOf(
-                    CustomAccessibilityAction(earlierLabel) { onMoveEarlier(); true },
-                    CustomAccessibilityAction(laterLabel) { onMoveLater(); true },
-                    CustomAccessibilityAction(hideLabel) { onHide(); true },
+                customActions = listOfNotNull(
+                    onMoveEarlier?.let { CustomAccessibilityAction(earlierLabel) { it(); true } },
+                    onMoveLater?.let { CustomAccessibilityAction(laterLabel) { it(); true } },
+                    CustomAccessibilityAction(toggleLabel) { onToggle(); true },
                 )
             },
     ) {
         MetricCard(
             summary = summary,
-            onClick = {},
+            onClick = if (hidden) onToggle else ({}),
             modifier = Modifier
                 .fillMaxWidth()
+                .graphicsLayer { alpha = if (hidden) 0.55f else 1f }
                 .border(
                     BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     MaterialTheme.shapes.extraLarge,
                 ),
         )
         FilledTonalIconButton(
-            onClick = onHide,
+            onClick = onToggle,
             modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(32.dp),
         ) {
-            Icon(Icons.Rounded.Remove, contentDescription = hideLabel, modifier = Modifier.size(18.dp))
-        }
-    }
-}
-
-/** A hidden metric in edit mode's Hidden section; tapping it puts it back on the dashboard. */
-@Composable
-private fun HiddenCard(metric: Metric, onShow: () -> Unit) {
-    val title = metric.title
-    OutlinedCard(onClick = onShow, shape = MaterialTheme.shapes.large) {
-        Row(
-            Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(metric.accent.copy(alpha = 0.30f), metric.accent.copy(alpha = 0.16f))
-                        )
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(metric.icon, contentDescription = null, tint = metric.accent, modifier = Modifier.size(16.dp))
-            }
-            Spacer(Modifier.width(10.dp))
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                modifier = Modifier.weight(1f),
-            )
             Icon(
-                Icons.Rounded.Add,
-                contentDescription = stringResource(R.string.dashboard_show, title),
-                tint = MaterialTheme.colorScheme.primary,
+                if (hidden) Icons.Rounded.Add else Icons.Rounded.Remove,
+                contentDescription = toggleLabel,
+                modifier = Modifier.size(18.dp),
             )
         }
     }
