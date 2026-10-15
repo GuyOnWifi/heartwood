@@ -85,6 +85,10 @@ class MetricWidgetConfigActivity : ComponentActivity() {
                     prefs.toMutablePreferences().apply { this[METRIC_KEY] = metric.key }
                 }
                 MetricWidget.refreshData(app, glanceId)
+                // Some launchers (e.g. Android 9/10's) render the widget before this activity
+                // returns, starting a Glance session with the default metric; poke it so the
+                // live session re-reads the state written above.
+                MetricWidget().update(app, glanceId)
             }
             setResult(
                 Activity.RESULT_OK,

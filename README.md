@@ -3,7 +3,7 @@
 [![CI](https://github.com/GuyOnWifi/heartwood/actions/workflows/ci.yml/badge.svg)](https://github.com/GuyOnWifi/heartwood/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/GuyOnWifi/heartwood)](https://github.com/GuyOnWifi/heartwood/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/github/license/GuyOnWifi/heartwood)](LICENSE)
-![minSdk 30](https://img.shields.io/badge/minSdk-30-3DDC84?logo=android&logoColor=white)
+![minSdk 28](https://img.shields.io/badge/minSdk-28-3DDC84?logo=android&logoColor=white)
 [![Translation status](https://translate.codeberg.org/widget/heartwood/svg-badge.svg)](https://translate.codeberg.org/engage/heartwood/)
 
 A private, **read-only** [Health Connect](https://developer.android.com/health-connect)
@@ -54,9 +54,9 @@ Grab the APK from the [latest release](https://github.com/GuyOnWifi/heartwood/re
 or add `https://github.com/GuyOnWifi/heartwood` to [Obtainium](https://github.com/ImranR98/Obtainium)
 to get updates straight from GitHub releases.
 
-Requires Android 11+ and Health Connect, which is built into Android 14+ and available as
+Requires Android 9+ and Health Connect, which is built into Android 14+ and available as
 [an app](https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata) on
-Android 11–13.
+Android 9–13.
 
 ## Tech
 
@@ -64,7 +64,7 @@ Android 11–13.
 - `androidx.health.connect:connect-client` for all reads
 - `androidx.glance` widgets, WorkManager for periodic refresh
 - DataStore for goals
-- `minSdk 30`, `targetSdk 36`
+- `minSdk 28`, `targetSdk 36`
 
 ## Build
 
