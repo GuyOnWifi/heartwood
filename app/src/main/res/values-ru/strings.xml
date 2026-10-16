@@ -44,9 +44,9 @@
     <string name="action_cancel">Отменить</string>
     <string name="action_done">Готово</string>
     <string name="onboarding_welcome_title">Добро пожаловать в Heartwood</string>
-    <string name="onboarding_welcome_body">Ваш приватный просмотр Health Connect с открытым кодом. Только чтение, полная локальность данных.</string>
+    <string name="onboarding_welcome_body">Ваш приватный просмотр Health Connect. Только чтение, полная приватность данных.</string>
     <string name="onboarding_connect">Подключить Health Connect</string>
-    <string name="onboarding_hc_needed_title">нужен Health Connect</string>
+    <string name="onboarding_hc_needed_title">Нужен Health Connect</string>
     <string name="onboarding_hc_needed_body">Heartwood считывает данные через Health Connect. Установите или обновите приложение, чтобы продолжить.</string>
     <string name="dashboard_customize">Настроить главный экран</string>
     <string name="dashboard_edit_title">Редактировать главный экран</string>
@@ -97,7 +97,7 @@
     </plurals>
     <string name="summary_bar_value">%1$s: %2$s</string>
     <string name="summary_bar_goal_met">Цель достигнута</string>
-    <string name="summary_bar_below_goal">%1$s ниже цели</string>
+    <string name="summary_bar_below_goal">%1$s до цели</string>
     <string name="trend_new">Новое за неделю</string>
     <string name="trend_up">+%1$d%% vs предыдущая неделя</string>
     <string name="trend_down">%1$d%% vs предыдущая неделя</string>
