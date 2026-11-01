@@ -29,10 +29,10 @@ class ExportManagerTest {
 
         assertEquals(
             """
-            metric,title,unit,timestamp,value
-            steps,Steps,steps,2024-03-01T00:00:00Z,1200.0
-            steps,Steps,steps,2024-03-02T08:30:00Z,845.0
-            weight,Weight,kg,2024-03-02T08:30:00Z,70.5
+            metric,title,unit,timestamp,value,value2
+            steps,Steps,steps,2024-03-01T00:00:00Z,1200.0,
+            steps,Steps,steps,2024-03-02T08:30:00Z,845.0,
+            weight,Weight,kg,2024-03-02T08:30:00Z,70.5,
 
             """.trimIndent(),
             out,
@@ -43,7 +43,30 @@ class ExportManagerTest {
     fun csvWithNoPointsIsJustTheHeader() {
         val out = StringBuilder().also { exporter.writeCsv(it, listOf(Metric.STEPS to emptyList())) }
 
-        assertEquals("metric,title,unit,timestamp,value\n", out.toString())
+        assertEquals("metric,title,unit,timestamp,value,value2\n", out.toString())
+    }
+
+    @Test
+    fun bloodPressureCarriesDiastolicAsSecondValue() {
+        val bp = listOf(Metric.BLOOD_PRESSURE to listOf(SeriesPoint(t1, 120f, "Fri", value2 = 80f)))
+
+        val csv = StringBuilder().also { exporter.writeCsv(it, bp) }.toString()
+        assertEquals(
+            """
+            metric,title,unit,timestamp,value,value2
+            blood_pressure,Blood pressure,mmHg,2024-03-01T00:00:00Z,120.0,80.0
+
+            """.trimIndent(),
+            csv,
+        )
+
+        val json = StringBuilder().also { exporter.writeJson(it, bp) }.toString()
+        assertEquals(
+            """{"app":"Heartwood","metrics":[""" +
+                """{"key":"blood_pressure","title":"Blood pressure","unit":"mmHg","points":[""" +
+                """{"t":"2024-03-01T00:00:00Z","v":120.0,"v2":80.0}]}]}""",
+            json,
+        )
     }
 
     @Test
