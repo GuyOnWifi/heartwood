@@ -320,7 +320,8 @@ class HealthConnectManager(
                 .sortedBy { it.time }
                 .map { ExportRow(listOf(it.time, it.beatsPerMinute.toFloat())) }
             // The rest are one number each, read through series() so they're converted to [system].
-            else -> series(metric, days, system).map {
+            // Daily totals zero-fill days with no records for charts; an export leaves those days out.
+            else -> series(metric, days, system).filter { metric.kind != MetricKind.DAILY_TOTAL || it.value != 0f }.map {
                 val time: Any = if (metric.kind == MetricKind.DAILY_TOTAL) it.time.atZone(zone).toLocalDate() else it.time
                 ExportRow(listOf(time, it.value))
             }
