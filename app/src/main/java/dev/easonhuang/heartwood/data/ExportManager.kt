@@ -44,7 +44,8 @@ class ExportManager(
 
     // Writers and escapers are internal so unit tests can drive them without a ContentResolver.
     internal fun writeCsv(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
-        writer.append("metric,title,unit,timestamp,value,value2\n")
+        // Blood pressure's value is systolic; diastolic gets its own column, empty for other metrics.
+        writer.append("metric,title,unit,timestamp,value,diastolic\n")
         sections.forEach { (metric, points) ->
             points.forEach { p ->
                 writer.append(metric.key).append(',')
@@ -67,9 +68,14 @@ class ExportManager(
                 .append("\"points\":[")
             points.forEachIndexed { pi, p ->
                 if (pi > 0) writer.append(',')
-                writer.append("{\"t\":\"").append(iso.format(p.time)).append("\",\"v\":")
-                    .append(p.value.toString())
-                p.value2?.let { writer.append(",\"v2\":").append(it.toString()) }
+                writer.append("{\"t\":\"").append(iso.format(p.time)).append("\",")
+                val dia = p.value2
+                if (dia != null) {
+                    writer.append("\"sys\":").append(p.value.toString())
+                        .append(",\"dia\":").append(dia.toString())
+                } else {
+                    writer.append("\"v\":").append(p.value.toString())
+                }
                 writer.append('}')
             }
             writer.append("]}")

@@ -29,7 +29,7 @@ class ExportManagerTest {
 
         assertEquals(
             """
-            metric,title,unit,timestamp,value,value2
+            metric,title,unit,timestamp,value,diastolic
             steps,Steps,steps,2024-03-01T00:00:00Z,1200.0,
             steps,Steps,steps,2024-03-02T08:30:00Z,845.0,
             weight,Weight,kg,2024-03-02T08:30:00Z,70.5,
@@ -43,7 +43,7 @@ class ExportManagerTest {
     fun csvWithNoPointsIsJustTheHeader() {
         val out = StringBuilder().also { exporter.writeCsv(it, listOf(Metric.STEPS to emptyList())) }
 
-        assertEquals("metric,title,unit,timestamp,value,value2\n", out.toString())
+        assertEquals("metric,title,unit,timestamp,value,diastolic\n", out.toString())
     }
 
     @Test
@@ -53,7 +53,7 @@ class ExportManagerTest {
         val csv = StringBuilder().also { exporter.writeCsv(it, bp) }.toString()
         assertEquals(
             """
-            metric,title,unit,timestamp,value,value2
+            metric,title,unit,timestamp,value,diastolic
             blood_pressure,Blood pressure,mmHg,2024-03-01T00:00:00Z,120.0,80.0
 
             """.trimIndent(),
@@ -64,7 +64,7 @@ class ExportManagerTest {
         assertEquals(
             """{"app":"Heartwood","metrics":[""" +
                 """{"key":"blood_pressure","title":"Blood pressure","unit":"mmHg","points":[""" +
-                """{"t":"2024-03-01T00:00:00Z","v":120.0,"v2":80.0}]}]}""",
+                """{"t":"2024-03-01T00:00:00Z","sys":120.0,"dia":80.0}]}]}""",
             json,
         )
     }
