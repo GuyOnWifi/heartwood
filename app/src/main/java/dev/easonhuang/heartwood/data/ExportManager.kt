@@ -44,14 +44,16 @@ class ExportManager(
 
     // Writers and escapers are internal so unit tests can drive them without a ContentResolver.
     internal fun writeCsv(writer: Appendable, sections: List<Pair<Metric, List<SeriesPoint>>>) {
-        writer.append("metric,title,unit,timestamp,value\n")
+        // Blood pressure's value is systolic; diastolic gets its own column, empty for other metrics.
+        writer.append("metric,title,unit,timestamp,value,diastolic\n")
         sections.forEach { (metric, points) ->
             points.forEach { p ->
                 writer.append(metric.key).append(',')
                     .append(csv(metric.title(context))).append(',')
                     .append(metric.unit(context)).append(',')
                     .append(iso.format(p.time)).append(',')
-                    .append(p.value.toString()).append('\n')
+                    .append(p.value.toString()).append(',')
+                    .append(p.value2?.toString().orEmpty()).append('\n')
             }
         }
     }
@@ -66,8 +68,15 @@ class ExportManager(
                 .append("\"points\":[")
             points.forEachIndexed { pi, p ->
                 if (pi > 0) writer.append(',')
-                writer.append("{\"t\":\"").append(iso.format(p.time)).append("\",\"v\":")
-                    .append(p.value.toString()).append('}')
+                writer.append("{\"t\":\"").append(iso.format(p.time)).append("\",")
+                val dia = p.value2
+                if (dia != null) {
+                    writer.append("\"sys\":").append(p.value.toString())
+                        .append(",\"dia\":").append(dia.toString())
+                } else {
+                    writer.append("\"v\":").append(p.value.toString())
+                }
+                writer.append('}')
             }
             writer.append("]}")
         }
