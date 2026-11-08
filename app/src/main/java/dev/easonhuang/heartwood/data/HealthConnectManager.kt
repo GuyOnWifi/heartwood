@@ -292,31 +292,39 @@ class HealthConnectManager(
     ): List<SeriesPoint> =
         if (metric.kind == MetricKind.DAILY_TOTAL) series(metric, days, system) else emptyList()
 
-    /** Flat list of points for export, with finer granularity for sampled metrics. */
-    suspend fun exportRows(
+    /**
+     * Rows for export, matching [exportColumns]: one per day for daily totals, one per sample or
+     * reading for the rest, and one per session for sleep and exercise, with their labels.
+     */
+    suspend fun exportRecords(
         metric: Metric,
         days: Int,
         system: UnitSystem = UnitSystem.METRIC,
-    ): List<SeriesPoint> = when (metric) {
-        Metric.HEART_RATE ->
-            read(HeartRateRecord::class, daysAgoStart(minOf(days, 30)), Instant.now())
+    ): List<ExportRow> {
+        val start = daysAgoStart(days)
+        val now = Instant.now()
+        return when (metric) {
+            Metric.EXERCISE -> read(ExerciseSessionRecord::class, start, now)
+                .filterIsInstance<ExerciseSessionRecord>().sortedBy { it.startTime }.map(::exerciseRow)
+            Metric.SLEEP -> read(SleepSessionRecord::class, start, now)
+                .filterIsInstance<SleepSessionRecord>().sortedBy { it.startTime }.map(::sleepRow)
+            Metric.BLOOD_PRESSURE -> read(BloodPressureRecord::class, start, now)
+                .filterIsInstance<BloodPressureRecord>().sortedBy { it.time }.map(::bloodPressureRow)
+            Metric.BLOOD_GLUCOSE -> read(BloodGlucoseRecord::class, start, now)
+                .filterIsInstance<BloodGlucoseRecord>().sortedBy { it.time }.map(::bloodGlucoseRow)
+            Metric.VO2MAX -> read(Vo2MaxRecord::class, start, now)
+                .filterIsInstance<Vo2MaxRecord>().sortedBy { it.time }.map(::vo2MaxRow)
+            Metric.HEART_RATE -> read(HeartRateRecord::class, daysAgoStart(minOf(days, 30)), now)
                 .filterIsInstance<HeartRateRecord>()
                 .flatMap { it.samples }
                 .sortedBy { it.time }
-                .map { SeriesPoint(it.time, it.beatsPerMinute.toFloat(), timeFmt.format(it.time.atZone(zone))) }
-        Metric.BLOOD_PRESSURE ->
-            read(BloodPressureRecord::class, daysAgoStart(days), Instant.now())
-                .filterIsInstance<BloodPressureRecord>()
-                .sortedBy { it.time }
-                .map {
-                    SeriesPoint(
-                        it.time,
-                        it.systolic.inMillimetersOfMercury.toFloat(),
-                        dayFmt.format(it.time.atZone(zone)),
-                        it.diastolic.inMillimetersOfMercury.toFloat(),
-                    )
-                }
-        else -> series(metric, days, system)
+                .map { ExportRow(listOf(it.time, it.beatsPerMinute.toFloat())) }
+            // The rest are one number each, read through series() so they're converted to [system].
+            else -> series(metric, days, system).map {
+                val time: Any = if (metric.kind == MetricKind.DAILY_TOTAL) it.time.atZone(zone).toLocalDate() else it.time
+                ExportRow(listOf(time, it.value))
+            }
+        }
     }
 
     // ---- Series builders -----------------------------------------------------------------------

@@ -201,13 +201,13 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showFormatDialog = false
-                    csvLauncher.launch("heartwood-export.csv")
+                    csvLauncher.launch("heartwood-export.${ExportFormat.CSV.extension}")
                 }) { Text("CSV") }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showFormatDialog = false
-                    jsonLauncher.launch("heartwood-export.json")
+                    jsonLauncher.launch("heartwood-export.${ExportFormat.JSON.extension}")
                 }) { Text("JSON") }
             },
         )
