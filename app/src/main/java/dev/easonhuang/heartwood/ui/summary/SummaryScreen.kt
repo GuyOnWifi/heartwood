@@ -132,7 +132,7 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
     ) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                GoalRing(progress = stat.progress, color = accent) {
+                DayRings(stat) {
                     Text(
                         "${(stat.progress * 100).roundToInt()}%",
                         style = MaterialTheme.typography.labelLarge,
@@ -209,6 +209,25 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Each of the last 7 days as a goal ring, nested oldest outermost so today is the innermost ring.
+ * [content] sits in the middle.
+ */
+@Composable
+private fun DayRings(stat: WeeklyStat, content: @Composable () -> Unit) {
+    Box(contentAlignment = Alignment.Center) {
+        stat.perDay.forEachIndexed { i, day ->
+            GoalRing(
+                progress = if (stat.goal > 0f) day.value / stat.goal else 0f,
+                color = stat.metric.accent,
+                diameter = (112 - 12 * i).dp,
+                stroke = 5.dp,
+            )
+        }
+        content()
     }
 }
 
