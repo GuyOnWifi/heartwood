@@ -78,6 +78,8 @@
     <string name="dashboard_show">Show %1$s</string>
     <string name="dashboard_move_earlier">Move earlier</string>
     <string name="dashboard_move_later">Move later</string>
+    <string name="dashboard_show_ring">Show %1$s as ring</string>
+    <string name="dashboard_show_graph">Show %1$s as graph</string>
     <string name="card_locked">Locked</string>
     <string name="card_tap_to_grant">Tap to grant access</string>
 
