@@ -111,6 +111,19 @@
                 android:resource="@xml/metric_widget_info" />
         </receiver>
 
+        <!-- Last 7 days of steps vs goal, as nested rings -->
+        <receiver
+            android:name=".widget.WeekWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_week_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/week_widget_info" />
+        </receiver>
+
         <activity
             android:name=".widget.MetricWidgetConfigActivity"
             android:exported="true"
