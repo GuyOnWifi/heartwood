@@ -5,6 +5,7 @@ import android.provider.Settings
 import androidx.health.connect.client.aggregate.AggregateMetric
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod
 import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
@@ -13,6 +14,7 @@ import androidx.health.connect.client.testing.AggregationResult
 import androidx.health.connect.client.testing.FakeHealthConnectClient
 import androidx.health.connect.client.testing.FakePermissionController
 import androidx.health.connect.client.testing.stubs.stub
+import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Pressure
 import androidx.test.core.app.ApplicationProvider
@@ -33,6 +35,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.roundToInt
 
 @RunWith(RobolectricTestRunner::class)
 class HealthConnectManagerTest {
@@ -111,6 +114,35 @@ class HealthConnectManagerTest {
         assertEquals(listOf(72f, 71f, 70f), detail.points.map { it.value })
         assertEquals(detail.points.sortedBy { it.time }, detail.points)
         assertEquals("70.0 kg", detail.headline)
+    }
+
+    @Test
+    fun imperialDetailConvertsPointsStatsAndHeadline() = runTest {
+        fake.insertRecords(listOf(weight(daysAgo = 2, kg = 80.0), weight(daysAgo = 1, kg = 70.0)))
+
+        val detail = manager.readDetail(Metric.WEIGHT, UnitSystem.IMPERIAL)
+
+        assertEquals(listOf(176.4f, 154.3f), detail.points.map { (it.value * 10).roundToInt() / 10f })
+        assertEquals("154.3 lb", detail.headline)
+        assertEquals("176.4 lb", detail.stats.single { it.first == "Max" }.second)
+        assertEquals(UnitSystem.IMPERIAL, detail.system)
+    }
+
+    @Test
+    fun imperialDailySeriesConvertsDistanceToMiles() = runTest {
+        @Suppress("UNCHECKED_CAST")
+        val fiveMiles = AggregationResultGroupedByPeriod(
+            result = AggregationResult(
+                metrics = mapOf(DistanceRecord.DISTANCE_TOTAL as AggregateMetric<Any> to Length.kilometers(8.04672)),
+            ),
+            startTime = today.atStartOfDay(),
+            endTime = today.plusDays(1).atStartOfDay(),
+        )
+        fake.overrides.aggregateGroupByPeriod = stub(default = listOf(fiveMiles))
+
+        val points = manager.readDailySeries(Metric.DISTANCE, days = 1, UnitSystem.IMPERIAL)
+
+        assertEquals(5f, points.single().value, 0.001f)
     }
 
     // ---- Dashboard summaries -------------------------------------------------------------------

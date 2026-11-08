@@ -37,6 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.easonhuang.heartwood.data.DashboardPreferences
+import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.ExportManager
 import dev.easonhuang.heartwood.data.GoalsRepository
 import dev.easonhuang.heartwood.data.HealthConnectManager
@@ -63,6 +64,7 @@ fun HeartwoodRoot(
     goalsRepo: GoalsRepository,
     exporter: ExportManager,
     dashboardPrefs: DashboardPreferences,
+    units: UnitPreferences,
     deepLinkMetric: String? = null,
     onDeepLinkConsumed: () -> Unit = {},
 ) {
@@ -167,7 +169,7 @@ fun HeartwoodRoot(
         !hasData -> OnboardingScreen(onConnect = ::startSetup)
         else -> {
             MainNav(
-                manager, goalsRepo, exporter, dashboardPrefs,
+                manager, goalsRepo, exporter, dashboardPrefs, units,
                 onManagePermissions = ::manageAccess,
                 deepLinkMetric = deepLinkMetric,
                 onDeepLinkConsumed = onDeepLinkConsumed,
@@ -182,6 +184,7 @@ private fun MainNav(
     goalsRepo: GoalsRepository,
     exporter: ExportManager,
     dashboardPrefs: DashboardPreferences,
+    units: UnitPreferences,
     onManagePermissions: () -> Unit,
     deepLinkMetric: String? = null,
     onDeepLinkConsumed: () -> Unit = {},
@@ -234,18 +237,20 @@ private fun MainNav(
                 DashboardScreen(
                     manager = manager,
                     dashboardPrefs = dashboardPrefs,
+                    units = units,
                     bottomInset = bottomInset,
                     onOpenMetric = { metric -> navController.navigate("detail/${metric.key}") },
                     onManagePermissions = onManagePermissions,
                 )
             }
             composable(Dest.SUMMARY.route) {
-                SummaryScreen(manager = manager, goalsRepo = goalsRepo, bottomInset = bottomInset)
+                SummaryScreen(manager = manager, goalsRepo = goalsRepo, units = units, bottomInset = bottomInset)
             }
             composable(Dest.SETTINGS.route) {
                 SettingsScreen(
                     manager = manager,
                     exporter = exporter,
+                    units = units,
                     bottomInset = bottomInset,
                     onManagePermissions = onManagePermissions,
                 )
@@ -258,6 +263,7 @@ private fun MainNav(
                     DetailScreen(
                         manager = manager,
                         metric = metric,
+                        units = units,
                         onBack = { navController.popBackStack() },
                     )
                 }

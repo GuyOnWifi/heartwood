@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MonitorHeart
+import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -49,7 +53,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -60,6 +66,9 @@ import dev.easonhuang.heartwood.data.ExportFormat
 import dev.easonhuang.heartwood.data.ExportManager
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
+import dev.easonhuang.heartwood.data.UnitPreferences
+import dev.easonhuang.heartwood.data.UnitSystem
+import dev.easonhuang.heartwood.widget.WidgetUpdateScheduler
 import kotlinx.coroutines.launch
 
 private const val REPO_URL = "https://github.com/GuyOnWifi/heartwood"
@@ -69,6 +78,7 @@ private const val REPO_URL = "https://github.com/GuyOnWifi/heartwood"
 fun SettingsScreen(
     manager: HealthConnectManager,
     exporter: ExportManager,
+    units: UnitPreferences,
     bottomInset: Dp,
     onManagePermissions: () -> Unit,
 ) {
@@ -78,6 +88,8 @@ fun SettingsScreen(
     val snackbar = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     var showFormatDialog by remember { mutableStateOf(false) }
+    var showUnitsDialog by remember { mutableStateOf(false) }
+    val unitSystem by units.system.collectAsStateWithLifecycle(initialValue = null)
 
     suspend fun runExport(uri: Uri, format: ExportFormat) {
         val granted = runCatching { manager.grantedPermissions() }.getOrDefault(emptySet())
@@ -136,6 +148,19 @@ fun SettingsScreen(
                     )
                 }
             }
+            item { SectionLabel(stringResource(R.string.settings_section_display)) }
+            item {
+                SettingsCard {
+                    SettingRow(
+                        icon = Icons.Rounded.Straighten,
+                        title = stringResource(R.string.settings_units),
+                        subtitle = unitSystem?.let {
+                            stringResource(R.string.units_summary, stringResource(it.labelRes), stringResource(it.exampleRes))
+                        }.orEmpty(),
+                        onClick = { showUnitsDialog = true },
+                    )
+                }
+            }
             item { SectionLabel(stringResource(R.string.settings_section_about)) }
             item {
                 SettingsCard {
@@ -184,6 +209,52 @@ fun SettingsScreen(
                     showFormatDialog = false
                     jsonLauncher.launch("heartwood-export.json")
                 }) { Text("JSON") }
+            },
+        )
+    }
+
+    if (showUnitsDialog) {
+        AlertDialog(
+            onDismissRequest = { showUnitsDialog = false },
+            title = { Text(stringResource(R.string.settings_units)) },
+            text = {
+                Column(Modifier.selectableGroup()) {
+                    UnitSystem.entries.forEach { option ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium)
+                                .selectable(
+                                    selected = option == unitSystem,
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        showUnitsDialog = false
+                                        scope.launch {
+                                            units.set(option)
+                                            // Widgets render from their own stored state, so redraw them now.
+                                            WidgetUpdateScheduler.refreshNow(context)
+                                        }
+                                    },
+                                )
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = option == unitSystem, onClick = null)
+                            Spacer(Modifier.size(12.dp))
+                            Column {
+                                Text(stringResource(option.labelRes), style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    stringResource(option.exampleRes),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showUnitsDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }

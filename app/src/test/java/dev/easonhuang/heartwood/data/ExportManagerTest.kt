@@ -13,7 +13,7 @@ import java.time.Instant
 class ExportManagerTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val exporter = ExportManager(context, HealthConnectManager(context, FakeHealthConnectClient()))
+    private val exporter = ExportManager(context, HealthConnectManager(context, FakeHealthConnectClient()), UnitPreferences(context))
 
     private val t1 = Instant.parse("2024-03-01T00:00:00Z")
     private val t2 = Instant.parse("2024-03-02T08:30:00Z")
@@ -90,6 +90,15 @@ class ExportManagerTest {
                 """{"key":"height","title":"Height","unit":"cm","points":[]}]}""",
             out,
         )
+    }
+
+    @Test
+    fun imperialExportLabelsConvertedUnits() {
+        val out = StringBuilder().also {
+            exporter.writeCsv(it, listOf(Metric.WEIGHT to listOf(SeriesPoint(t2, 155.4f, "Mar 2"))), UnitSystem.IMPERIAL)
+        }.toString()
+
+        assertEquals("metric,title,unit,timestamp,value,diastolic\nweight,Weight,lb,2024-03-02T08:30:00Z,155.4,\n", out)
     }
 
     @Test

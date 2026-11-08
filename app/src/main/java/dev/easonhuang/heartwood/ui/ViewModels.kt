@@ -10,11 +10,14 @@ import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricDetail
 import dev.easonhuang.heartwood.data.MetricSummary
+import dev.easonhuang.heartwood.data.UnitPreferences
+import dev.easonhuang.heartwood.data.UnitSystem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -22,6 +25,7 @@ import kotlinx.coroutines.launch
 class DashboardViewModel(
     private val manager: HealthConnectManager,
     private val prefs: DashboardPreferences,
+    private val units: UnitPreferences,
 ) : ViewModel() {
     // All summaries as read from Health Connect, in catalog order (null until first load).
     private val _summaries = MutableStateFlow<List<MetricSummary>?>(null)
@@ -53,37 +57,40 @@ class DashboardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
-    init { refresh() }
+    // Loads on first emission, then again whenever the user switches unit system.
+    init { viewModelScope.launch { units.system.collect { load(it) } } }
 
     fun refresh() {
-        viewModelScope.launch {
-            _refreshing.value = true
-            _summaries.value = manager.readDashboard()
-            _refreshing.value = false
-        }
+        viewModelScope.launch { load(units.system.first()) }
+    }
+
+    private suspend fun load(system: UnitSystem) {
+        _refreshing.value = true
+        _summaries.value = manager.readDashboard(system)
+        _refreshing.value = false
     }
 
     companion object {
-        fun factory(manager: HealthConnectManager, prefs: DashboardPreferences) = viewModelFactory {
-            initializer { DashboardViewModel(manager, prefs) }
-        }
+        fun factory(manager: HealthConnectManager, prefs: DashboardPreferences, units: UnitPreferences) =
+            viewModelFactory { initializer { DashboardViewModel(manager, prefs, units) } }
     }
 }
 
 class DetailViewModel(
     private val manager: HealthConnectManager,
     private val metric: Metric,
+    units: UnitPreferences,
 ) : ViewModel() {
     private val _detail = MutableStateFlow<MetricDetail?>(null)
     val detail = _detail.asStateFlow()
 
     init {
-        viewModelScope.launch { _detail.value = manager.readDetail(metric) }
+        viewModelScope.launch { units.system.collect { _detail.value = manager.readDetail(metric, it) } }
     }
 
     companion object {
-        fun factory(manager: HealthConnectManager, metric: Metric) = viewModelFactory {
-            initializer { DetailViewModel(manager, metric) }
+        fun factory(manager: HealthConnectManager, metric: Metric, units: UnitPreferences) = viewModelFactory {
+            initializer { DetailViewModel(manager, metric, units) }
         }
     }
 }
