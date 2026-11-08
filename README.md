@@ -34,10 +34,13 @@ read it all here.
 - **Today**, Material You cards for steps, heart rate, sleep, energy, distance, exercise,
   SpO₂, weight, blood pressure and more, each with a sparkline. Long-press to rearrange or
   hide cards right on the grid, keeping only what you track.
+- **Goal rings**, any goal card (steps, energy, exercise, distance, water, floors) can show today
+  in a ring against its goal instead of a sparkline; switch it per card in edit mode.
 - **Detail views**, full charts, statistics and recent records per metric.
-- **Weekly summary**, daily averages vs. goals you set, with progress rings, goal lines and
-  week-over-week trends. Tap a bar to see that day's value.
-- **Home-screen widgets**, key metrics, dynamically themed (Glance + Material 3).
+- **Weekly summary**, daily averages vs. goals you set, with each of the last 7 days as a nested
+  goal ring, goal lines and week-over-week trends. Tap a bar to see that day's value.
+- **Home-screen widgets**, key metrics or the last 7 days of steps as rings, dynamically themed
+  (Glance + Material 3).
 - **Export**, save your accessible data to CSV or JSON via the system file picker.
 - **Private by design**, read-only Health Connect permissions and no network permission at
   all, so it *can't* send your data anywhere.
