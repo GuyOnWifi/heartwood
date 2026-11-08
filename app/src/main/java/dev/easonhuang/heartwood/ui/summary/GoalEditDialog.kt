@@ -21,6 +21,7 @@ import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.WeeklyStat
 import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.data.unit
+import java.util.Locale
 
 @Composable
 fun GoalEditDialog(
@@ -30,7 +31,8 @@ fun GoalEditDialog(
 ) {
     var text by remember {
         mutableStateOf(
-            if (stat.goal % 1f == 0f) stat.goal.toInt().toString() else stat.goal.toString()
+            // A converted goal (5 km → 3.1068559 mi) needs rounding before it's editable.
+            "%.2f".format(Locale.ROOT, stat.goal).trimEnd('0').trimEnd('.')
         )
     }
     AlertDialog(
@@ -38,14 +40,14 @@ fun GoalEditDialog(
         title = { Text(stringResource(R.string.goal_dialog_title, stat.metric.title)) },
         text = {
             Column {
-                Text(stringResource(R.string.goal_dialog_daily_target, stat.metric.unit))
+                Text(stringResource(R.string.goal_dialog_daily_target, stat.metric.unit(stat.system)))
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.filter { c -> c.isDigit() || c == '.' } },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text(stat.metric.unit) },
+                    suffix = { Text(stat.metric.unit(stat.system)) },
                 )
             }
         },

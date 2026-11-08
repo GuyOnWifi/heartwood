@@ -7,6 +7,7 @@ data class WeeklyStat(
     val thisWeekAvg: Float,
     val lastWeekAvg: Float,
     val goal: Float,
+    val system: UnitSystem = UnitSystem.METRIC,  // perDay, averages and goal are all in this
 ) {
     /** 0f..1f progress of this week's daily average toward the goal. */
     val progress: Float get() = if (goal > 0f) (thisWeekAvg / goal).coerceIn(0f, 1f) else 0f

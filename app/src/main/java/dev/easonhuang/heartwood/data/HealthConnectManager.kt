@@ -64,8 +64,8 @@ class HealthConnectManager(
         get() = localizedFormatter(if (DateFormat.is24HourFormat(context)) "Hm" else "hm")
 
     private fun str(id: Int, vararg args: Any): String = context.getString(id, *args)
-    private fun withUnit(value: String, metric: Metric): String =
-        str(R.string.value_with_unit, value, metric.unit(context))
+    private fun withUnit(value: String, metric: Metric, system: UnitSystem = UnitSystem.METRIC): String =
+        str(R.string.value_with_unit, value, metric.unit(context, system))
 
     val client: HealthConnectClient by lazy {
         clientOverride ?: HealthConnectClient.getOrCreate(context)
@@ -96,26 +96,26 @@ class HealthConnectManager(
 
     // ---- Dashboard -----------------------------------------------------------------------------
 
-    suspend fun readDashboard(): List<MetricSummary> {
+    suspend fun readDashboard(system: UnitSystem = UnitSystem.METRIC): List<MetricSummary> {
         val granted = runCatching { grantedPermissions() }.getOrDefault(emptySet())
         return Metric.entries.map { metric ->
             val has = granted.contains(permissionFor(metric))
             if (!has) {
-                MetricSummary(metric, "-", null, hasData = false, granted = false)
+                MetricSummary(metric, "-", null, hasData = false, granted = false, system = system)
             } else {
-                runCatching { summarize(metric) }
-                    .getOrElse { MetricSummary(metric, "-", str(R.string.no_data), hasData = false, granted = true) }
+                runCatching { summarize(metric, system) }
+                    .getOrElse { MetricSummary(metric, "-", str(R.string.no_data), hasData = false, granted = true, system = system) }
             }
         }
     }
 
-    private suspend fun summarize(metric: Metric): MetricSummary {
+    private suspend fun summarize(metric: Metric, system: UnitSystem): MetricSummary {
         if (metric == Metric.HEART_RATE) return heartRateSummary()
         if (metric == Metric.BLOOD_PRESSURE) return bloodPressureSummary()
 
-        val points = series(metric, days = 7)
+        val points = series(metric, days = 7, system)
         if (points.isEmpty()) {
-            return MetricSummary(metric, "-", str(R.string.no_data), hasData = false, granted = true)
+            return MetricSummary(metric, "-", str(R.string.no_data), hasData = false, granted = true, system = system)
         }
         val spark = points.map { it.value }
         return when (metric.kind) {
@@ -124,22 +124,24 @@ class HealthConnectManager(
                 val avg = spark.average().toFloat()
                 MetricSummary(
                     metric = metric,
-                    value = metric.formatValue(today),
-                    caption = str(R.string.summary_7day_avg, withUnit(metric.formatValue(avg), metric)),
+                    value = metric.formatValue(today, system),
+                    caption = str(R.string.summary_7day_avg, withUnit(metric.formatValue(avg, system), metric, system)),
                     hasData = true,
                     granted = true,
                     spark = spark,
+                    system = system,
                 )
             }
             MetricKind.LATEST -> {
                 val last = points.last()
                 MetricSummary(
                     metric = metric,
-                    value = metric.formatValue(last.value),
+                    value = metric.formatValue(last.value, system),
                     caption = str(R.string.summary_as_of, dayFmt.format(last.time.atZone(zone))),
                     hasData = true,
                     granted = true,
                     spark = spark,
+                    system = system,
                 )
             }
         }
@@ -189,40 +191,41 @@ class HealthConnectManager(
 
     // ---- Detail --------------------------------------------------------------------------------
 
-    suspend fun readDetail(metric: Metric): MetricDetail {
+    suspend fun readDetail(metric: Metric, system: UnitSystem = UnitSystem.METRIC): MetricDetail {
         if (metric == Metric.HEART_RATE) return heartRateDetail()
         if (metric == Metric.BLOOD_PRESSURE) return bloodPressureDetail()
 
         val days = if (metric.kind == MetricKind.DAILY_TOTAL) 14 else 90
-        val points = series(metric, days)
+        val points = series(metric, days, system)
         if (points.isEmpty()) {
-            return MetricDetail(metric, "-", str(R.string.no_data_recorded), emptyList())
+            return MetricDetail(metric, "-", str(R.string.no_data_recorded), emptyList(), system = system)
         }
         val values = points.map { it.value }
+        fun fmt(value: Float) = withUnit(metric.formatValue(value, system), metric, system)
         val headline: String
         val caption: String
         val stats: List<Pair<String, String>>
         if (metric.kind == MetricKind.DAILY_TOTAL) {
-            headline = metric.formatValue(points.last().value)
-            caption = str(R.string.detail_today_unit, metric.unit(context))
+            headline = metric.formatValue(points.last().value, system)
+            caption = str(R.string.detail_today_unit, metric.unit(context, system))
             stats = listOf(
-                str(R.string.stat_daily_avg) to withUnit(metric.formatValue(values.average().toFloat()), metric),
-                str(R.string.stat_best_day) to withUnit(metric.formatValue(values.max()), metric),
-                str(R.string.stat_14day_total) to withUnit(metric.formatValue(values.sum()), metric),
+                str(R.string.stat_daily_avg) to fmt(values.average().toFloat()),
+                str(R.string.stat_best_day) to fmt(values.max()),
+                str(R.string.stat_14day_total) to fmt(values.sum()),
             )
         } else {
-            headline = withUnit(metric.formatValue(points.last().value), metric)
+            headline = fmt(points.last().value)
             caption = str(R.string.detail_latest_at, dayFmt.format(points.last().time.atZone(zone)))
             stats = listOf(
-                str(R.string.stat_average) to withUnit(metric.formatValue(values.average().toFloat()), metric),
-                str(R.string.stat_min) to withUnit(metric.formatValue(values.min()), metric),
-                str(R.string.stat_max) to withUnit(metric.formatValue(values.max()), metric),
+                str(R.string.stat_average) to fmt(values.average().toFloat()),
+                str(R.string.stat_min) to fmt(values.min()),
+                str(R.string.stat_max) to fmt(values.max()),
             )
         }
         val recent = points.takeLast(20).reversed().map {
-            RecordRow(withUnit(metric.formatValue(it.value), metric), dayMonthTime(it.time))
+            RecordRow(fmt(it.value), dayMonthTime(it.time))
         }
-        return MetricDetail(metric, headline, caption, points, stats, recent)
+        return MetricDetail(metric, headline, caption, points, stats, recent, system)
     }
 
     private suspend fun heartRateDetail(): MetricDetail {
@@ -282,11 +285,19 @@ class HealthConnectManager(
     // ---- Public series for summary & export ----------------------------------------------------
 
     /** Daily totals over [days] for a [MetricKind.DAILY_TOTAL] metric; empty otherwise. */
-    suspend fun readDailySeries(metric: Metric, days: Int): List<SeriesPoint> =
-        if (metric.kind == MetricKind.DAILY_TOTAL) series(metric, days) else emptyList()
+    suspend fun readDailySeries(
+        metric: Metric,
+        days: Int,
+        system: UnitSystem = UnitSystem.METRIC,
+    ): List<SeriesPoint> =
+        if (metric.kind == MetricKind.DAILY_TOTAL) series(metric, days, system) else emptyList()
 
     /** Flat list of points for export, with finer granularity for sampled metrics. */
-    suspend fun exportRows(metric: Metric, days: Int): List<SeriesPoint> = when (metric) {
+    suspend fun exportRows(
+        metric: Metric,
+        days: Int,
+        system: UnitSystem = UnitSystem.METRIC,
+    ): List<SeriesPoint> = when (metric) {
         Metric.HEART_RATE ->
             read(HeartRateRecord::class, daysAgoStart(minOf(days, 30)), Instant.now())
                 .filterIsInstance<HeartRateRecord>()
@@ -305,18 +316,22 @@ class HealthConnectManager(
                         it.diastolic.inMillimetersOfMercury.toFloat(),
                     )
                 }
-        else -> series(metric, days)
+        else -> series(metric, days, system)
     }
 
     // ---- Series builders -----------------------------------------------------------------------
 
-    private suspend fun series(metric: Metric, days: Int): List<SeriesPoint> =
-        when (metric.kind) {
+    /** Every per-metric read funnels through here, so this is the one place units are converted. */
+    private suspend fun series(metric: Metric, days: Int, system: UnitSystem): List<SeriesPoint> {
+        val base = when (metric.kind) {
             MetricKind.DAILY_TOTAL ->
                 if (metric == Metric.EXERCISE) exerciseSeries(days) else dailyTotalSeries(metric, days)
             MetricKind.LATEST ->
                 if (metric == Metric.SLEEP) sleepSeries(days) else latestSeries(metric, days)
         }
+        if (system == UnitSystem.METRIC) return base
+        return base.map { it.copy(value = metric.fromBase(it.value, system)) }
+    }
 
     private suspend fun dailyTotalSeries(metric: Metric, days: Int): List<SeriesPoint> {
         val agg = aggregateMetricFor(metric) ?: return emptyList()

@@ -44,6 +44,7 @@ import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricDetail
 import dev.easonhuang.heartwood.data.MetricKind
 import dev.easonhuang.heartwood.data.RecordRow
+import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.formatValue
 import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.ui.DetailViewModel
@@ -55,11 +56,12 @@ import dev.easonhuang.heartwood.ui.components.LineChart
 fun DetailScreen(
     manager: HealthConnectManager,
     metric: Metric,
+    units: UnitPreferences,
     onBack: () -> Unit,
 ) {
     val vm: DetailViewModel = viewModel(
         key = metric.key,
-        factory = DetailViewModel.factory(manager, metric),
+        factory = DetailViewModel.factory(manager, metric, units),
     )
     val detail by vm.detail.collectAsStateWithLifecycle()
 
@@ -143,7 +145,7 @@ private fun ChartCard(d: MetricDetail) {
             if (d.metric.kind == MetricKind.DAILY_TOTAL) {
                 BarChart(d.points, d.metric.accent, Modifier.fillMaxSize())
             } else {
-                LineChart(d.points, d.metric.accent, Modifier.fillMaxSize(), format = d.metric::formatValue)
+                LineChart(d.points, d.metric.accent, Modifier.fillMaxSize(), format = { d.metric.formatValue(it, d.system) })
             }
         }
     }

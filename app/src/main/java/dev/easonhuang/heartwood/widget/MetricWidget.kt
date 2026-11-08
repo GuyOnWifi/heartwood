@@ -44,6 +44,7 @@ import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricKind
 import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.data.unit
+import kotlinx.coroutines.flow.first
 
 // Glance per-widget state. The widget renders entirely from this state via currentState(), so a
 // state change (from config or the refresh worker) reactively recomposes the live widget, Glance's
@@ -73,12 +74,15 @@ class MetricWidget : GlanceAppWidget() {
         suspend fun refreshData(context: Context, id: GlanceId) {
             val metricKey = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)[METRIC_KEY]
             val metric = Metric.fromKey(metricKey ?: "") ?: return
-            val manager = (context.applicationContext as HeartwoodApp).healthConnect
+            val app = context.applicationContext as HeartwoodApp
+            val manager = app.healthConnect
             val granted = manager.isGranted(metric)
-            val detail = if (granted) runCatching { manager.readDetail(metric) }.getOrNull() else null
+            val system = app.units.system.first()
+            val detail = if (granted) runCatching { manager.readDetail(metric, system) }.getOrNull() else null
             val value = when {
                 detail == null -> "-"
-                metric.kind == MetricKind.DAILY_TOTAL -> context.getString(R.string.value_with_unit, detail.headline, metric.unit(context))
+                metric.kind == MetricKind.DAILY_TOTAL ->
+                    context.getString(R.string.value_with_unit, detail.headline, metric.unit(context, system))
                 else -> detail.headline
             }
             val points = detail?.points?.map { it.value } ?: emptyList()

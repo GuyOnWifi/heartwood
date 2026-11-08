@@ -55,6 +55,7 @@ import dev.easonhuang.heartwood.R
 import dev.easonhuang.heartwood.data.GoalsRepository
 import dev.easonhuang.heartwood.data.HealthConnectManager
 import dev.easonhuang.heartwood.data.WeeklyStat
+import dev.easonhuang.heartwood.data.UnitPreferences
 import dev.easonhuang.heartwood.data.formatValue
 import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.data.unit
@@ -70,9 +71,10 @@ import kotlin.math.roundToInt
 fun SummaryScreen(
     manager: HealthConnectManager,
     goalsRepo: GoalsRepository,
+    units: UnitPreferences,
     bottomInset: androidx.compose.ui.unit.Dp,
 ) {
-    val vm: SummaryViewModel = viewModel(factory = SummaryViewModel.factory(manager, goalsRepo))
+    val vm: SummaryViewModel = viewModel(factory = SummaryViewModel.factory(manager, goalsRepo, units))
     val state by vm.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     var editing by remember { mutableStateOf<WeeklyStat?>(null) }
@@ -115,7 +117,7 @@ fun SummaryScreen(
         GoalEditDialog(
             stat = stat,
             onDismiss = { editing = null },
-            onSave = { value -> vm.setGoal(stat.metric, value); editing = null },
+            onSave = { value -> vm.setGoal(stat.metric, value, stat.system); editing = null },
         )
     }
 }
@@ -143,9 +145,9 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
                     Text(
                         stringResource(
                             R.string.summary_progress,
-                            stat.metric.formatValue(stat.thisWeekAvg),
-                            stat.metric.formatValue(stat.goal),
-                            stat.metric.unit,
+                            stat.metric.formatValue(stat.thisWeekAvg, stat.system),
+                            stat.metric.formatValue(stat.goal, stat.system),
+                            stat.metric.unit(stat.system),
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -170,7 +172,7 @@ private fun WeeklyCard(stat: WeeklyStat, onEdit: () -> Unit) {
             val dayFormat = remember { dayFormatter() }
             val dayTexts = stat.perDay.map { p ->
                 stringResource(R.string.summary_bar_value, dayFormat.format(p.time.atZone(ZoneId.systemDefault())),
-                    stringResource(R.string.value_with_unit, stat.metric.formatValue(p.value), stat.metric.unit)) to
+                    stringResource(R.string.value_with_unit, stat.metric.formatValue(p.value, stat.system), stat.metric.unit(stat.system))) to
                     goalText(stat, p.value)
             }
             Box(
@@ -217,7 +219,7 @@ private fun goalText(stat: WeeklyStat, value: Float): String? = when {
     value >= stat.goal -> stringResource(R.string.summary_bar_goal_met)
     else -> stringResource(
         R.string.summary_bar_below_goal,
-        stringResource(R.string.value_with_unit, stat.metric.formatValue(stat.goal - value), stat.metric.unit),
+        stringResource(R.string.value_with_unit, stat.metric.formatValue(stat.goal - value, stat.system), stat.metric.unit(stat.system)),
     )
 }
 

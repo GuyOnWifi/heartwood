@@ -34,6 +34,7 @@ import dev.easonhuang.heartwood.data.Metric
 import dev.easonhuang.heartwood.data.MetricSummary
 import dev.easonhuang.heartwood.data.title
 import dev.easonhuang.heartwood.data.unit
+import kotlinx.coroutines.flow.first
 
 /** Preferred metrics to surface on the home screen, in priority order. */
 private val WIDGET_METRICS = listOf(
@@ -43,9 +44,10 @@ private val WIDGET_METRICS = listOf(
 class HeartwoodWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val manager = (context.applicationContext as HeartwoodApp).healthConnect
+        val app = context.applicationContext as HeartwoodApp
+        val manager = app.healthConnect
         val summaries = if (manager.isAvailable) {
-            runCatching { manager.readDashboard() }.getOrDefault(emptyList())
+            runCatching { manager.readDashboard(app.units.system.first()) }.getOrDefault(emptyList())
         } else emptyList()
         val tiles = WIDGET_METRICS
             .mapNotNull { m -> summaries.firstOrNull { it.metric == m && it.granted && it.hasData } }
@@ -125,7 +127,7 @@ private fun Tile(tile: MetricSummary, modifier: GlanceModifier) {
             )
             Spacer(GlanceModifier.width(3.dp))
             Text(
-                text = tile.metric.unit(context),
+                text = tile.metric.unit(context, tile.system),
                 style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 11.sp),
             )
         }

@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
                         goalsRepo = app.goals,
                         exporter = app.exporter,
                         dashboardPrefs = app.dashboardPrefs,
+                        units = app.units,
                         deepLinkMetric = deepLinkMetric,
                         onDeepLinkConsumed = { deepLinkMetric = null },
                     )

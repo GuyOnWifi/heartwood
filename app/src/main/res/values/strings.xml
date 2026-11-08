@@ -43,6 +43,10 @@
     <string name="unit_cm">cm</string>
     <string name="unit_mmhg">mmHg</string>
     <string name="unit_mg_dl">mg/dL</string>
+    <string name="unit_miles">mi</string>
+    <string name="unit_fl_oz">fl oz</string>
+    <string name="unit_lb">lb</string>
+    <string name="unit_inches">in</string>
     <!-- A formatted number followed by its unit, e.g. "70.0 kg" -->
     <string name="value_with_unit">%1$s %2$s</string>
 
@@ -141,6 +145,14 @@
     <string name="settings_open_hc_failed">Couldn\'t open Health Connect</string>
     <string name="settings_export">Export data</string>
     <string name="settings_export_summary">Save your accessible data to a file (CSV or JSON)</string>
+    <string name="settings_section_display">Display</string>
+    <string name="settings_units">Units</string>
+    <string name="units_metric">Metric</string>
+    <string name="units_metric_example">km, kg, L, cm</string>
+    <string name="units_imperial">Imperial</string>
+    <string name="units_imperial_example">mi, lb, fl oz, in</string>
+    <!-- Units setting subtitle, e.g. "Imperial (mi, lb, fl oz, in)" -->
+    <string name="units_summary">%1$s (%2$s)</string>
     <string name="settings_section_about">About</string>
     <string name="settings_version">Heartwood %1$s</string>
     <string name="settings_version_summary">Private, read-only Health Connect viewer</string>
