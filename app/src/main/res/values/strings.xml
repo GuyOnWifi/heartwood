@@ -97,6 +97,12 @@
     <string name="stat_daily_avg">Daily avg</string>
     <string name="stat_best_day">Best day</string>
     <string name="stat_14day_total">14-day total</string>
+    <string name="stat_week_avg">This week, daily avg</string>
+    <string name="stat_week_total">This week, total</string>
+    <string name="stat_month_avg">This month, daily avg</string>
+    <string name="stat_month_total">This month, total</string>
+    <string name="stat_year_avg">This year, daily avg</string>
+    <string name="stat_year_total">This year, total</string>
     <string name="stat_average">Average</string>
     <string name="stat_min">Min</string>
     <string name="stat_max">Max</string>

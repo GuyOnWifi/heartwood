@@ -37,6 +37,7 @@ import java.time.LocalDateTime
 import java.time.Period
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -226,6 +227,33 @@ class HealthConnectManager(
             RecordRow(fmt(it.value), dayMonthTime(it.time))
         }
         return MetricDetail(metric, headline, caption, points, stats, recent, system)
+    }
+
+    /**
+     * Extra steps detail rows: week/month/year figures. Kept out of [readDetail] because it reads
+     * back to 1 January, which the widgets have no use for.
+     */
+    suspend fun readStepPeriodStats(): List<Pair<String, String>> {
+        val today = LocalDate.now()
+        // "This week" is the last 7 days, the same window as the Summary's takeLast(7).
+        val weekStart = today.minusDays(6)
+        // Early January, the week can start last year, so read back to whichever comes first.
+        val from = minOf(weekStart, today.withDayOfYear(1))
+        val daily = dailyTotalSeries(Metric.STEPS, ChronoUnit.DAYS.between(from, today).toInt() + 1)
+            .map { it.time.atZone(zone).toLocalDate() to it.value }
+        if (daily.isEmpty()) return emptyList()
+        val week = periodTotals(daily, weekStart)
+        val month = periodTotals(daily, today.withDayOfMonth(1))
+        val year = periodTotals(daily, today.withDayOfYear(1))
+        fun steps(v: Float) = withUnit(Metric.STEPS.formatValue(v), Metric.STEPS)
+        return listOf(
+            str(R.string.stat_week_avg) to steps(week.average),
+            str(R.string.stat_week_total) to steps(week.total),
+            str(R.string.stat_month_avg) to steps(month.average),
+            str(R.string.stat_month_total) to steps(month.total),
+            str(R.string.stat_year_avg) to steps(year.average),
+            str(R.string.stat_year_total) to steps(year.total),
+        )
     }
 
     private suspend fun heartRateDetail(): MetricDetail {

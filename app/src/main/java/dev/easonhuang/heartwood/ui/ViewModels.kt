@@ -106,8 +106,17 @@ class DetailViewModel(
     val detail = _detail.asStateFlow()
 
     init {
-        viewModelScope.launch { units.system.collect { _detail.value = manager.readDetail(metric, it) } }
+        viewModelScope.launch {
+            units.system.collect { system ->
+                val detail = manager.readDetail(metric, system)
+                _detail.value = if (metric == Metric.STEPS) detail.copy(stats = detail.stats + stepPeriodStats()) else detail
+            }
+        }
     }
+
+    private suspend fun stepPeriodStats(): List<Pair<String, String>> = runCatching {
+        manager.readStepPeriodStats()
+    }.getOrDefault(emptyList())
 
     companion object {
         fun factory(manager: HealthConnectManager, metric: Metric, units: UnitPreferences) = viewModelFactory {
