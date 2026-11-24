@@ -160,7 +160,7 @@
     <string name="settings_open_source_summary">GPL-3.0-or-later, view the code</string>
     <string name="settings_privacy_note">Heartwood never sends your data anywhere. Everything stays on this device.</string>
     <string name="export_dialog_title">Export format</string>
-    <string name="export_dialog_body">Choose how to save your data.</string>
+    <string name="export_dialog_body">JSON is one file. CSV is a .zip with one file per metric, since each has its own columns.</string>
     <string name="export_nothing">No accessible data to export</string>
     <plurals name="export_success">
         <item quantity="one">Exported %1$d record as %2$s</item>
