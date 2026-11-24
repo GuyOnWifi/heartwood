@@ -11,8 +11,11 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.testing.AggregationResult
+import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.testing.FakeHealthConnectClient
 import androidx.health.connect.client.testing.FakePermissionController
+import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
+import androidx.health.connect.client.testing.stubs.MutableStub
 import androidx.health.connect.client.testing.stubs.stub
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
@@ -82,6 +85,24 @@ class HealthConnectManagerTest {
             points.map { it.time },
         )
         assertEquals(DateTimeFormatter.ofPattern("EEE").format(today), points.last().label)
+    }
+
+    @Test
+    fun dailySeriesCoversAllOfToday() = runTest {
+        // Ending the range at "now" makes Health Connect prorate a whole-day record (issue #33).
+        var request: AggregateGroupByPeriodRequest? = null
+        fake.overrides.aggregateGroupByPeriod = MutableStub { r: Any ->
+            request = r as AggregateGroupByPeriodRequest
+            listOf(stepsBucket(today, 500))
+        }
+
+        manager.readDailySeries(Metric.STEPS, days = 7)
+
+        // The request's range is internal to the client library, so read it reflectively.
+        val range = AggregateGroupByPeriodRequest::class.java.getDeclaredField("timeRangeFilter")
+            .apply { isAccessible = true }.get(request)
+        val expected = TimeRangeFilter.between(today.minusDays(6).atStartOfDay(), today.plusDays(1).atStartOfDay())
+        assertEquals(expected, range)
     }
 
     @Test
