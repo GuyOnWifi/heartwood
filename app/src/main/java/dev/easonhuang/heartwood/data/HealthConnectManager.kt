@@ -33,7 +33,6 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Period
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -345,7 +344,10 @@ class HealthConnectManager(
     private suspend fun dailyTotalSeries(metric: Metric, days: Int): List<SeriesPoint> {
         val agg = aggregateMetricFor(metric) ?: return emptyList()
         val start = LocalDate.now().minusDays((days - 1).toLong()).atStartOfDay()
-        val end = LocalDateTime.now()
+        // End at tomorrow's start, not now: Health Connect prorates a record that only partly
+        // overlaps the range, so a whole-day record (Samsung writes 00:00-23:59) would otherwise
+        // count only the share of the day that has elapsed.
+        val end = LocalDate.now().plusDays(1).atStartOfDay()
         val buckets = client.aggregateGroupByPeriod(
             AggregateGroupByPeriodRequest(
                 metrics = setOf(agg),
