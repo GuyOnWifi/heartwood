@@ -85,6 +85,16 @@ class HealthConnectManagerTest {
     }
 
     @Test
+    fun exportLeavesOutDaysWithNoSteps() = runTest {
+        fake.overrides.aggregateGroupByPeriod =
+            stub(default = listOf(stepsBucket(today.minusDays(3), 1200), stepsBucket(today, 500)))
+
+        val rows = manager.exportRecords(Metric.STEPS, days = 7)
+
+        assertEquals(listOf(listOf(today.minusDays(3), 1200f), listOf(today, 500f)), rows.map { it.values })
+    }
+
+    @Test
     fun dailySeriesIsEmptyWhenEveryBucketIsZero() = runTest {
         fake.overrides.aggregateGroupByPeriod =
             stub(default = listOf(stepsBucket(today.minusDays(1), 0), stepsBucket(today, 0)))

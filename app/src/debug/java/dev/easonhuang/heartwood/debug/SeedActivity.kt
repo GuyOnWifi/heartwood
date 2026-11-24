@@ -12,6 +12,7 @@ import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.FloorsClimbedRecord
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.MealType
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
@@ -145,7 +146,7 @@ class SeedActivity : Activity() {
             if (!sleepEnd.isAfter(Instant.now())) records += SleepSessionRecord(
                 startTime = sleepStart, startZoneOffset = off(sleepStart),
                 endTime = sleepEnd, endZoneOffset = off(sleepEnd),
-                title = "Sleep", notes = null, stages = emptyList(), metadata = meta,
+                title = "Sleep", notes = null, stages = sleepStages(sleepStart, sleepEnd), metadata = meta,
             )
         }
 
@@ -194,12 +195,14 @@ class SeedActivity : Activity() {
             records += BloodGlucoseRecord(
                 time = t, zoneOffset = off(t), level = BloodGlucose.milligramsPerDeciliter(88.0 + wave * 14),
                 specimenSource = BloodGlucoseRecord.SPECIMEN_SOURCE_CAPILLARY_BLOOD,
-                mealType = 0, relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_FASTING, metadata = meta,
+                mealType = MealType.MEAL_TYPE_BREAKFAST, relationToMeal = BloodGlucoseRecord.RELATION_TO_MEAL_FASTING, metadata = meta,
             )
             if (d % 2 == 0) records += BloodPressureRecord(
                 time = t, zoneOffset = off(t),
                 systolic = Pressure.millimetersOfMercury(114.0 + wave * 10),
                 diastolic = Pressure.millimetersOfMercury(74.0 + wave * 6),
+                bodyPosition = BloodPressureRecord.BODY_POSITION_SITTING_DOWN,
+                measurementLocation = BloodPressureRecord.MEASUREMENT_LOCATION_LEFT_UPPER_ARM,
                 metadata = meta,
             )
             if (d % 7 == 0) records += Vo2MaxRecord(time = t, zoneOffset = off(t), vo2MillilitersPerMinuteKilogram = 44.0 - d * 0.1, metadata = meta)
@@ -229,4 +232,24 @@ class SeedActivity : Activity() {
         records.chunked(1000).forEach { client.insertRecords(it) }  // HC caps records per insert
         records.size
     }
+}
+
+/** ~90-minute cycles of light, deep, light and REM, with a short wake near the end. */
+private fun sleepStages(start: Instant, end: Instant): List<SleepSessionRecord.Stage> {
+    val pattern = listOf(
+        SleepSessionRecord.STAGE_TYPE_LIGHT to 25L, SleepSessionRecord.STAGE_TYPE_DEEP to 35L,
+        SleepSessionRecord.STAGE_TYPE_LIGHT to 15L, SleepSessionRecord.STAGE_TYPE_REM to 15L,
+    )
+    val stages = mutableListOf<SleepSessionRecord.Stage>()
+    var t = start
+    var i = 0
+    while (t.isBefore(end)) {
+        val (type, minutes) = if (end.epochSecond - t.epochSecond in 1200..1500) {
+            SleepSessionRecord.STAGE_TYPE_AWAKE to 5L
+        } else pattern[i++ % pattern.size]
+        val stageEnd = minOf(t.plusSeconds(minutes * 60), end)
+        stages += SleepSessionRecord.Stage(t, stageEnd, type)
+        t = stageEnd
+    }
+    return stages
 }

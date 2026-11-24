@@ -41,7 +41,9 @@ read it all here.
   goal ring, goal lines and week-over-week trends. Tap a bar to see that day's value.
 - **Home-screen widgets**, key metrics or the last 7 days of steps as rings, dynamically themed
   (Glance + Material 3).
-- **Export**, save your accessible data to CSV or JSON via the system file picker.
+- **Export**, save your accessible data as JSON or as a zip of CSVs (one per metric) via the
+  system file picker. Sleep keeps its stages, exercise its sessions and type, and blood pressure,
+  glucose and VO₂ max their context.
 - **Private by design**, read-only Health Connect permissions and no network permission at
   all, so it *can't* send your data anywhere.
 
