@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RectF
 import androidx.core.graphics.ColorUtils
 import dev.easonhuang.heartwood.data.MetricKind
 
@@ -71,6 +72,32 @@ fun chartBitmap(
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
         })
+    }
+    return bmp
+}
+
+/**
+ * Nested goal rings for the week widget, like Summary's day rings: [values] are oldest first, so
+ * index 0 is the outer ring and today is innermost. Tracks are a faint tint of [colorArgb].
+ */
+fun weekRingsBitmap(values: List<Float>, goal: Float, colorArgb: Int, sizePx: Int): Bitmap {
+    val size = sizePx.coerceAtLeast(1)
+    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+    val stroke = size * 8f / 168f
+    val step = size * 11f / 168f // radius shrinks 11 per 168, so 7 rings leave room in the middle
+    values.forEachIndexed { i, v ->
+        val inset = stroke / 2f + i * step
+        val rect = RectF(inset, inset, size - inset, size - inset)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = stroke
+            strokeCap = Paint.Cap.ROUND
+            color = ColorUtils.setAlphaComponent(colorArgb, 46)
+        }
+        canvas.drawArc(rect, 0f, 360f, false, paint)
+        paint.color = colorArgb
+        canvas.drawArc(rect, -90f, 360f * (v / goal).coerceIn(0f, 1f), false, paint)
     }
     return bmp
 }

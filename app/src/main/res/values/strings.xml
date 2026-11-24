@@ -5,6 +5,12 @@
     <string name="widget_metric_name">Heartwood metric</string>
     <string name="widget_description">Glanceable health metrics from Health Connect.</string>
     <string name="metric_widget_description">A single health metric with a graph, pick which one.</string>
+    <string name="widget_week_name">Heartwood steps week</string>
+    <string name="week_widget_description">The last 7 days of steps against your goal, as rings.</string>
+    <!-- Under the "5/7" on the week widget -->
+    <string name="widget_week_goal_met">days goal met</string>
+    <!-- Week widget daily average, e.g. "avg 6,120/day" -->
+    <string name="widget_week_avg">avg %1$s/day</string>
 
     <!-- Metric names -->
     <string name="metric_steps">Steps</string>
@@ -78,6 +84,8 @@
     <string name="dashboard_show">Show %1$s</string>
     <string name="dashboard_move_earlier">Move earlier</string>
     <string name="dashboard_move_later">Move later</string>
+    <string name="dashboard_show_ring">Show %1$s as ring</string>
+    <string name="dashboard_show_graph">Show %1$s as graph</string>
     <string name="card_locked">Locked</string>
     <string name="card_tap_to_grant">Tap to grant access</string>
 
@@ -95,6 +103,12 @@
     <string name="stat_daily_avg">Daily avg</string>
     <string name="stat_best_day">Best day</string>
     <string name="stat_14day_total">14-day total</string>
+    <string name="stat_week_avg">This week, daily avg</string>
+    <string name="stat_week_total">This week, total</string>
+    <string name="stat_month_avg">This month, daily avg</string>
+    <string name="stat_month_total">This month, total</string>
+    <string name="stat_year_avg">This year, daily avg</string>
+    <string name="stat_year_total">This year, total</string>
     <string name="stat_average">Average</string>
     <string name="stat_min">Min</string>
     <string name="stat_max">Max</string>

@@ -238,6 +238,7 @@ private fun MainNav(
                     manager = manager,
                     dashboardPrefs = dashboardPrefs,
                     units = units,
+                    goalsRepo = goalsRepo,
                     bottomInset = bottomInset,
                     onOpenMetric = { metric -> navController.navigate("detail/${metric.key}") },
                     onManagePermissions = onManagePermissions,

@@ -50,6 +50,20 @@ class DashboardPreferences(private val context: Context) {
         DashboardLayout(order, hidden)
     }
 
+    private val ringsKey = stringSetPreferencesKey("ring_cards")
+
+    /** Goal metrics whose Today card shows a goal ring instead of its sparkline. */
+    val rings: Flow<Set<Metric>> = context.dashboardDataStore.data.map { prefs ->
+        prefs[ringsKey].orEmpty().mapNotNull { Metric.fromKey(it) }.toSet()
+    }
+
+    suspend fun setRing(metric: Metric, ring: Boolean) {
+        context.dashboardDataStore.edit { prefs ->
+            val current = prefs[ringsKey].orEmpty()
+            prefs[ringsKey] = if (ring) current + metric.key else current - metric.key
+        }
+    }
+
     suspend fun save(order: List<Metric>, hidden: Set<Metric>) {
         context.dashboardDataStore.edit { prefs ->
             prefs[orderKey] = order.joinToString(",") { it.key }

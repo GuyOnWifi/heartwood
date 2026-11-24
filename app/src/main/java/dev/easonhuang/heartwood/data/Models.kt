@@ -10,6 +10,7 @@ data class MetricSummary(
     val hasData: Boolean,
     val granted: Boolean,
     val spark: List<Float> = emptyList(),
+    val goal: Float? = null,    // daily target, if the metric supports one; in [system] like the spark
     val system: UnitSystem = UnitSystem.METRIC,  // value, caption and spark are in this
 )
 
