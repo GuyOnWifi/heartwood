@@ -1,0 +1,7 @@
+- Imperial units option (mi, lb, fl oz, in)
+- Goal cards on Today can show a ring instead of a graph
+- Summary shows each of the last 7 days as a goal ring
+- New widget: last 7 days of steps as rings
+- Steps detail adds week, month and year totals and averages
+- Exports keep each metric's details: sleep stages, exercise types, full blood pressure
+- Fixed today's steps showing only part of the day with Samsung Health
